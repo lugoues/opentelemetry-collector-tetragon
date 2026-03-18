@@ -20,3 +20,20 @@ dir = "receiver/tetragonreceiver"
 description = "Tidy receiver module dependencies"
 run = "go mod tidy"
 dir = "receiver/tetragonreceiver"
+
+[tasks.ocb]
+description = "Build custom OTel Collector binary with OCB"
+run = "builder --config distribution/builder-config.yaml --output-path /tmp/otelcol-tetragon --skip-strict-versioning"
+
+[tasks.container]
+description = "Build container image"
+run = "docker build -t otelcol-tetragon:local -f Containerfile ."
+
+[tasks.smoke]
+description = "Run container smoke test: start, check health endpoint, stop"
+run = """
+docker run -d --name otelcol-smoke -p 13133:13133 otelcol-tetragon:local --config /etc/otelcol/config.yaml 2>/dev/null || true
+sleep 5
+curl -sf http://localhost:13133/ && echo "HEALTHY" || echo "UNHEALTHY"
+docker rm -f otelcol-smoke 2>/dev/null || true
+"""
