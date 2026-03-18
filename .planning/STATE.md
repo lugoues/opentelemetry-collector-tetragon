@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-distribution 02-01-PLAN.md
-last_updated: "2026-03-18T13:45:53.554Z"
+stopped_at: Completed 02-distribution 02-02-PLAN.md
+last_updated: "2026-03-18T13:49:28.368Z"
 last_activity: "2026-03-18 — Plan 01-01 complete: tetragonreceiver module scaffold"
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 5
-  completed_plans: 4
+  completed_plans: 5
   percent: 0
 ---
 
@@ -54,6 +54,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-receiver-module P02 | 30 | 2 tasks | 24 files |
 | Phase 01-receiver-module P03 | 25 | 2 tasks | 6 files |
 | Phase 02-distribution P01 | 2 | 2 tasks | 4 files |
+| Phase 02-distribution P02 | 1 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -79,6 +80,9 @@ Recent decisions affecting current work:
 - [Phase 02-distribution]: output_path /tmp/dist absolute path keeps OCB-generated files outside source tree
 - [Phase 02-distribution]: --skip-strict-versioning required for tetragonreceiver v0.1.0 vs OCB v0.148.0 version train
 - [Phase 02-distribution]: OCB path: ./receiver/tetragonreceiver - must run builder from repo root for correct resolution
+- [Phase 02-distribution]: WORKDIR /build + path: ./receiver/tetragonreceiver ensures correct OCB relative path resolution inside Docker build context
+- [Phase 02-distribution]: --skip-strict-versioning needed in Containerfile for tetragonreceiver v0.1.0 vs OCB v0.148.0 mismatch
+- [Phase 02-distribution]: systemd apt install must precede groupadd/useradd in Containerfile so systemd-journal group exists for usermod -aG
 
 ### Pending Todos
 
@@ -91,6 +95,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T13:45:53.552Z
-Stopped at: Completed 02-distribution 02-01-PLAN.md
+Last session: 2026-03-18T13:49:28.365Z
+Stopped at: Completed 02-distribution 02-02-PLAN.md
 Resume file: None
