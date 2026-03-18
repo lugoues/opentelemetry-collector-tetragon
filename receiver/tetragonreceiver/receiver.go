@@ -11,6 +11,7 @@ import (
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/component/componentstatus"
 	"go.opentelemetry.io/collector/consumer"
+	"go.opentelemetry.io/collector/consumer/consumererror"
 	"go.opentelemetry.io/collector/receiver"
 	"go.opentelemetry.io/collector/receiver/receiverhelper"
 	"go.uber.org/zap"
@@ -107,6 +108,7 @@ func (r *tetragonReceiver) streamEvents(ctx context.Context) {
 			return
 		}
 
+		start := time.Now()
 		err := r.runStream(ctx, eventCh)
 		if ctx.Err() != nil {
 			// Clean shutdown — do not reconnect.
@@ -115,9 +117,13 @@ func (r *tetragonReceiver) streamEvents(ctx context.Context) {
 			return
 		}
 
-		// Stream had connected (or at least attempted); reset backoff so next
-		// retry starts from InitialInterval instead of accumulating.
-		b.Reset()
+		// Only reset backoff after a stream that lasted long enough to indicate
+		// a real connection. Without this guard, Reset() on every iteration
+		// defeats exponential backoff — the receiver would retry at a fixed
+		// InitialInterval instead of 1s -> 2s -> 4s -> ... -> MaxInterval.
+		if time.Since(start) > 30*time.Second {
+			b.Reset()
+		}
 
 		// Transient error — report and schedule retry.
 		componentstatus.ReportStatus(r.host,
@@ -186,14 +192,20 @@ func (r *tetragonReceiver) runStream(ctx context.Context, eventCh chan<- *tetrag
 
 // consumeChannel drains eventCh, converting each event and forwarding it to the
 // next consumer. Decoupled from runStream to prevent backpressure stalls.
+// Uses context.Background for ConsumeLogs so in-flight events can complete
+// even when the streaming context is cancelled during shutdown.
 func (r *tetragonReceiver) consumeChannel(ctx context.Context, eventCh <-chan *tetragonv1.GetEventsResponse) {
 	for resp := range eventCh {
 		logs := convertEvent(resp)
-		obsCtx := r.obsReport.StartLogsOp(ctx)
+		obsCtx := r.obsReport.StartLogsOp(context.Background())
 		err := r.consumer.ConsumeLogs(obsCtx, logs)
 		r.obsReport.EndLogsOp(obsCtx, "tetragon", logs.LogRecordCount(), err)
 		if err != nil {
-			r.logger.Error("failed to consume logs", zap.Error(err))
+			if consumererror.IsPermanent(err) {
+				r.logger.Error("permanent consumer error, dropping logs", zap.Error(err))
+			} else {
+				r.logger.Warn("transient consumer error", zap.Error(err))
+			}
 		}
 	}
 }
