@@ -38,20 +38,12 @@ created: 2026-03-18
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 01-01-01 | 01 | 1 | RFX-01 | code review | `go vet ./...` | ✅ | ⬜ pending |
-| 01-01-02 | 01 | 1 | RFX-02 | unit | `go test -race -run TestReceiverReconnectsOnStreamError ./...` | ✅ (extend) | ⬜ pending |
-| 01-01-03 | 01 | 1 | RFX-03 | unit | `go test -race -run TestReceiver ./...` | ✅ | ⬜ pending |
-| 01-01-04 | 01 | 1 | RFX-04 | unit | `go test -race -run TestReceiverStartShutdown ./...` | ✅ | ⬜ pending |
-| 01-01-05 | 01 | 1 | RFX-05 | code review | `go vet ./...` | ✅ | ⬜ pending |
-| 01-01-06 | 01 | 1 | RFX-06 | unit | `go test -race -run TestReceiverConsumesLogs ./...` | ✅ | ⬜ pending |
-| 01-02-01 | 02 | 2 | RFX-08 | compile | `go build ./...` | ✅ | ⬜ pending |
-| 01-02-02 | 02 | 2 | RFX-09 | unit | `go test -race -run TestConfigStruct ./...` | ❌ W0 | ⬜ pending |
-| 01-02-03 | 02 | 2 | RFX-10 | unit | `go test -race -run TestConfigValidate ./...` | ✅ (extend) | ⬜ pending |
-| 01-02-04 | 02 | 2 | RFX-11 | code review | n/a | ✅ | ⬜ pending |
-| 01-03-01 | 03 | 3 | RFX-07 | config review | CI run | ❌ W0 | ⬜ pending |
-| 01-03-02 | 03 | 3 | RFX-12 | existence | `ls LICENSE` | ❌ W0 | ⬜ pending |
-| 01-03-03 | 03 | 3 | RFX-13 | review | n/a | ✅ | ⬜ pending |
-| 01-03-04 | 03 | 3 | RFX-14 | review | n/a | ✅ | ⬜ pending |
+| 01-01-T1 | 01 | 1 | RFX-01, RFX-02 | code+unit | `go build ./... && go vet ./...` | ✅ | ⬜ pending |
+| 01-01-T2 | 01 | 1 | RFX-03 | unit | `go test -race -count=1 ./...` | ✅ | ⬜ pending |
+| 01-02-T1 | 02 | 1 | RFX-04, RFX-05, RFX-06, RFX-08 | unit | `go mod tidy && go test -race -count=1 ./...` | ✅ | ⬜ pending |
+| 01-02-T2 | 02 | 1 | RFX-09, RFX-10 | unit | `go test -race -run "TestConfigStruct\|TestConfigValidate" ./...` | ❌ W0 | ⬜ pending |
+| 01-03-T1 | 03 | 2 | RFX-07, RFX-11 | config | `grep -q 'go vet' ... && grep -q 'go:generate' ...` | ❌ W0 | ⬜ pending |
+| 01-03-T2 | 03 | 2 | RFX-12, RFX-13, RFX-14 | existence | `test -f LICENSE && grep -q 'Apache License' ...` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
