@@ -56,7 +56,9 @@ Plans:
   2. A merge to main pushes an image tagged `latest` and `sha-<commit>` to GHCR
   3. Pushing a semver tag (e.g., `v1.0.0`) produces image tags `1.0.0`, `1.0`, and `latest` on GHCR
   4. The published image manifest contains both `linux/amd64` and `linux/arm64` layers (verified via `docker manifest inspect`)
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 03-01-PLAN.md — CI workflow (test + multi-arch build-push to GHCR) and project README
 
 ## Progress
 
@@ -67,4 +69,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Receiver Module | 3/3 | Complete   | 2026-03-18 |
 | 2. Distribution | 2/2 | Complete   | 2026-03-18 |
-| 3. CI/CD and Release | 0/TBD | Not started | - |
+| 3. CI/CD and Release | 0/1 | Not started | - |
