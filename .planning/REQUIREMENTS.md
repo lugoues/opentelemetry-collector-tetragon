@@ -8,13 +8,13 @@
 ### Receiver Core
 
 - [x] **RECV-01**: Receiver registers as a logs receiver via `receiver.NewFactory` with `receiver.WithLogs`
-- [ ] **RECV-02**: Receiver implements `Start()` that connects to Tetragon gRPC endpoint and spawns stream goroutine without blocking
-- [ ] **RECV-03**: Receiver implements `Shutdown()` that cancels stream context, waits for goroutine exit, and closes gRPC connection
-- [ ] **RECV-04**: Receiver streams events via `FineGuidanceSensors.GetEvents` server-streaming RPC
-- [ ] **RECV-05**: Receiver reconnects with exponential backoff on stream errors (configurable initial_interval, max_interval, max_elapsed_time)
-- [ ] **RECV-06**: Receiver distinguishes clean shutdown (context cancelled) from transient errors (retry)
-- [ ] **RECV-07**: Receiver logs connection events, errors, and reconnects via zap structured logging
-- [ ] **RECV-08**: Receiver reports internal telemetry via obsreport (accepted/refused log records)
+- [x] **RECV-02**: Receiver implements `Start()` that connects to Tetragon gRPC endpoint and spawns stream goroutine without blocking
+- [x] **RECV-03**: Receiver implements `Shutdown()` that cancels stream context, waits for goroutine exit, and closes gRPC connection
+- [x] **RECV-04**: Receiver streams events via `FineGuidanceSensors.GetEvents` server-streaming RPC
+- [x] **RECV-05**: Receiver reconnects with exponential backoff on stream errors (configurable initial_interval, max_interval, max_elapsed_time)
+- [x] **RECV-06**: Receiver distinguishes clean shutdown (context cancelled) from transient errors (retry)
+- [x] **RECV-07**: Receiver logs connection events, errors, and reconnects via zap structured logging
+- [x] **RECV-08**: Receiver reports internal telemetry via obsreport (accepted/refused log records)
 
 ### Configuration
 
@@ -87,13 +87,13 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | RECV-01 | Phase 1 | Complete |
-| RECV-02 | Phase 1 | Pending |
-| RECV-03 | Phase 1 | Pending |
-| RECV-04 | Phase 1 | Pending |
-| RECV-05 | Phase 1 | Pending |
-| RECV-06 | Phase 1 | Pending |
-| RECV-07 | Phase 1 | Pending |
-| RECV-08 | Phase 1 | Pending |
+| RECV-02 | Phase 1 | Complete |
+| RECV-03 | Phase 1 | Complete |
+| RECV-04 | Phase 1 | Complete |
+| RECV-05 | Phase 1 | Complete |
+| RECV-06 | Phase 1 | Complete |
+| RECV-07 | Phase 1 | Complete |
+| RECV-08 | Phase 1 | Complete |
 | CONF-01 | Phase 1 | Complete |
 | CONF-02 | Phase 1 | Complete |
 | CONF-03 | Phase 1 | Complete |
