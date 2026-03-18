@@ -1,0 +1,36 @@
+# --- Build stage ---
+FROM docker.io/library/golang:1.25-bookworm AS builder
+
+RUN go install go.opentelemetry.io/collector/cmd/builder@v0.148.0
+
+WORKDIR /build
+COPY . .
+
+# Run from repo root so path: ./receiver/tetragonreceiver resolves correctly
+RUN builder \
+    --config distribution/builder-config.yaml \
+    --output-path /tmp/dist \
+    --skip-strict-versioning
+
+# --- Runtime stage ---
+FROM docker.io/library/debian:bookworm-slim
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      systemd \
+      ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create otel user AFTER systemd install so systemd-journal group exists
+RUN groupadd --system --gid 10001 otel && \
+    useradd --system --uid 10001 --gid otel --no-create-home otel && \
+    usermod -aG systemd-journal otel
+
+COPY --from=builder /tmp/dist/otelcol-tetragon /usr/local/bin/otelcol-tetragon
+
+USER otel
+
+EXPOSE 13133
+
+ENTRYPOINT ["/usr/local/bin/otelcol-tetragon"]
+CMD ["--config", "/etc/otelcol/config.yaml"]
