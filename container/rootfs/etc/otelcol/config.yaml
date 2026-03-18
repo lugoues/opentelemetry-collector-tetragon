@@ -7,14 +7,9 @@ extensions:
 
 receivers:
   tetragon:
-    endpoint: "tetragon:54321"
+    endpoint: ${env:TETRAGON_ENDPOINT}
     tls:
       insecure: true
-
-  journald:
-    directory: /var/log/journal
-    priority: info
-    storage: file_storage/checkpoint
 
 processors:
   batch:
@@ -28,7 +23,7 @@ processors:
 
 exporters:
   otlphttp/openobserve:
-    endpoint: http://openobserve:5080/api/default
+    endpoint: ${env:OTEL_EXPORTER_ENDPOINT}
     headers:
       Authorization: Basic ${env:OTEL_AUTH}
       stream-name: default
@@ -38,9 +33,5 @@ service:
   pipelines:
     logs/tetragon:
       receivers: [tetragon]
-      processors: [resourcedetection, batch]
-      exporters: [otlphttp/openobserve]
-    logs/journal:
-      receivers: [journald]
       processors: [resourcedetection, batch]
       exporters: [otlphttp/openobserve]

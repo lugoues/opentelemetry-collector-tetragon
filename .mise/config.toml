@@ -33,6 +33,9 @@ run = "docker build -t otelcol-tetragon:local -f container/Containerfile ."
 description = "Run container smoke test: start, check health endpoint, stop"
 run = """
 docker run -d --name otelcol-smoke -p 13133:13133 \
+  -e TETRAGON_ENDPOINT=localhost:54321 \
+  -e OTEL_EXPORTER_ENDPOINT=http://localhost:4318 \
+  -e OTEL_AUTH=dGVzdDp0ZXN0 \
   -v "$(pwd)/container/rootfs/etc/otelcol/config.yaml:/etc/otelcol/config.yaml:ro" \
   otelcol-tetragon:local 2>/dev/null || true
 sleep 5
