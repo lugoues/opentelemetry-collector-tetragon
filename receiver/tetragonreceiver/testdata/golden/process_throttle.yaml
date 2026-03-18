@@ -1,0 +1,19 @@
+resourceLogs:
+  - resource: {}
+    scopeLogs:
+      - logRecords:
+          - attributes:
+              - key: event.domain
+                value:
+                  stringValue: tetragon
+              - key: event.name
+                value:
+                  stringValue: process_throttle
+            body:
+              stringValue: '{"process_throttle":{"type":"THROTTLE_START","cgroup":"/system.slice/docker.service"},"node_name":"worker-1","time":"2026-03-18T10:08:00Z"}'
+            observedTimeUnixNano: "1773808981903668280"
+            severityNumber: 17
+            severityText: ERROR
+            timeUnixNano: "1773828480000000000"
+        scope:
+          name: tetragonreceiver
