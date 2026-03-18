@@ -46,18 +46,18 @@
 
 ### CI/CD
 
-- [ ] **CICD-01**: GitHub Actions workflow: test → build → push to GHCR
-- [ ] **CICD-02**: PR builds run tests and build image without pushing
-- [ ] **CICD-03**: Main branch pushes tag with `latest` + `sha-<commit>`
-- [ ] **CICD-04**: Semver tags produce versioned image tags (v1.2.3 → 1.2.3, 1.2, latest)
-- [ ] **CICD-05**: Multi-arch build: linux/amd64 and linux/arm64
+- [x] **CICD-01**: GitHub Actions workflow: test → build → push to GHCR
+- [x] **CICD-02**: PR builds run tests and build image without pushing
+- [x] **CICD-03**: Main branch pushes tag with `latest` + `sha-<commit>`
+- [x] **CICD-04**: Semver tags produce versioned image tags (v1.2.3 → 1.2.3, 1.2, latest)
+- [x] **CICD-05**: Multi-arch build: linux/amd64 and linux/arm64
 
 ### Project Setup
 
 - [x] **PROJ-01**: mise.toml with Go, OCB, and project tasks (build, test, lint)
 - [x] **PROJ-02**: Example collector config in rootfs/etc/otelcol/config.yaml
 - [x] **PROJ-03**: metadata.yaml declaring receiver type and alpha stability for logs signal
-- [ ] **PROJ-04**: README with usage, configuration reference, and build instructions
+- [x] **PROJ-04**: README with usage, configuration reference, and build instructions
 
 ## v2 Requirements
 
@@ -116,12 +116,12 @@
 | PROJ-01 | Phase 1 | Complete |
 | PROJ-02 | Phase 2 | Complete |
 | PROJ-03 | Phase 1 | Complete |
-| PROJ-04 | Phase 3 | Pending |
-| CICD-01 | Phase 3 | Pending |
-| CICD-02 | Phase 3 | Pending |
-| CICD-03 | Phase 3 | Pending |
-| CICD-04 | Phase 3 | Pending |
-| CICD-05 | Phase 3 | Pending |
+| PROJ-04 | Phase 3 | Complete |
+| CICD-01 | Phase 3 | Complete |
+| CICD-02 | Phase 3 | Complete |
+| CICD-03 | Phase 3 | Complete |
+| CICD-04 | Phase 3 | Complete |
+| CICD-05 | Phase 3 | Complete |
 
 **Coverage:**
 - v1 requirements: 32 total
