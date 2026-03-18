@@ -1,0 +1,8 @@
+{
+  "process_throttle": {
+    "type": "THROTTLE_START",
+    "cgroup": "/system.slice/docker.service"
+  },
+  "node_name": "worker-1",
+  "time": "2026-03-18T10:08:00Z"
+}

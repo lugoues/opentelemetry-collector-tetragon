@@ -1,0 +1,21 @@
+{
+  "process_exit": {
+    "process": {
+      "exec_id": "exit-test-id-12345",
+      "pid": 5678,
+      "uid": 1000,
+      "cwd": "/tmp",
+      "binary": "/usr/bin/sleep",
+      "arguments": "10"
+    },
+    "parent": {
+      "exec_id": "exit-parent-id-99999",
+      "pid": 5000,
+      "binary": "/bin/sh"
+    },
+    "status": 137,
+    "signal": "SIGKILL"
+  },
+  "node_name": "worker-1",
+  "time": "2026-03-18T10:01:00Z"
+}
