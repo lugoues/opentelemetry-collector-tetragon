@@ -122,22 +122,13 @@ func newTestReceiver(t *testing.T, client tetragonClient) (*tetragonReceiver, *c
 	return r, sink
 }
 
-// waitForLogs polls sink.AllLogs() until at least minRecords LogRecords have arrived
-// or the timeout is exceeded.
+// waitForLogs uses assert.Eventually to wait until at least minRecords LogRecords
+// have arrived in the sink.
 func waitForLogs(t *testing.T, sink *consumertest.LogsSink, minRecords int, timeout time.Duration) bool {
 	t.Helper()
-	deadline := time.Now().Add(timeout)
-	for time.Now().Before(deadline) {
-		total := 0
-		for _, ld := range sink.AllLogs() {
-			total += ld.LogRecordCount()
-		}
-		if total >= minRecords {
-			return true
-		}
-		time.Sleep(10 * time.Millisecond)
-	}
-	return false
+	return assert.Eventually(t, func() bool {
+		return totalRecords(sink) >= minRecords
+	}, timeout, 10*time.Millisecond)
 }
 
 // ---- Tests ----
@@ -207,12 +198,12 @@ func TestReceiverReconnectsOnStreamError(t *testing.T) {
 		makeExecResponse("/bin/curl"),
 	}}
 
-	var callCount int32
+	var callCount atomic.Int32
 	client := &mockTetragonClientFn{
 		fn: func(_ context.Context, _ *tetragonv1.GetEventsRequest, _ ...grpc.CallOption) (
 			tetragonv1.FineGuidanceSensors_GetEventsClient, error,
 		) {
-			n := atomic.AddInt32(&callCount, 1)
+			n := callCount.Add(1)
 			if n == 1 {
 				return nil, io.EOF
 			}
@@ -225,7 +216,7 @@ func TestReceiverReconnectsOnStreamError(t *testing.T) {
 
 	ok := waitForLogs(t, sink, 1, 10*time.Second)
 	assert.True(t, ok, "expected 1 log record after reconnect")
-	assert.GreaterOrEqual(t, atomic.LoadInt32(&callCount), int32(2), "expected at least 2 GetEvents calls")
+	assert.GreaterOrEqual(t, callCount.Load(), int32(2), "expected at least 2 GetEvents calls")
 
 	require.NoError(t, r.Shutdown(context.Background()))
 }
