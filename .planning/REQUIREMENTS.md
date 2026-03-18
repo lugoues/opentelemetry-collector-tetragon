@@ -40,9 +40,9 @@
 
 - [x] **DIST-01**: OCB builder-config.yaml produces custom collector with tetragonreceiver + journald, batch, resourcedetection, otlphttp, health_check, file_storage
 - [x] **DIST-02**: Top-level go.mod with replaces directive for local receiver module
-- [ ] **DIST-03**: Multi-stage Containerfile: Go builder with OCB → Debian-slim runtime with systemd and ca-certificates
-- [ ] **DIST-04**: Container runs as non-root user (otel:10001) with systemd-journal group membership
-- [ ] **DIST-05**: Container image is drop-in replacement: same entrypoint, config path, runtime user as current otelcol-contrib image
+- [x] **DIST-03**: Multi-stage Containerfile: Go builder with OCB → Debian-slim runtime with systemd and ca-certificates
+- [x] **DIST-04**: Container runs as non-root user (otel:10001) with systemd-journal group membership
+- [x] **DIST-05**: Container image is drop-in replacement: same entrypoint, config path, runtime user as current otelcol-contrib image
 
 ### CI/CD
 
@@ -110,9 +110,9 @@
 | CONV-10 | Phase 1 | Complete |
 | DIST-01 | Phase 2 | Complete |
 | DIST-02 | Phase 2 | Complete |
-| DIST-03 | Phase 2 | Pending |
-| DIST-04 | Phase 2 | Pending |
-| DIST-05 | Phase 2 | Pending |
+| DIST-03 | Phase 2 | Complete |
+| DIST-04 | Phase 2 | Complete |
+| DIST-05 | Phase 2 | Complete |
 | PROJ-01 | Phase 1 | Complete |
 | PROJ-02 | Phase 2 | Complete |
 | PROJ-03 | Phase 1 | Complete |
