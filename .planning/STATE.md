@@ -1,16 +1,15 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-milestone_name: MVP
-status: completed
-stopped_at: Milestone v1.0 complete
-last_updated: "2026-03-18"
-last_activity: "2026-03-18 — Milestone v1.0 MVP shipped"
+milestone_name: milestone
+status: unknown
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-03-18T17:21:45.762Z"
 progress:
-  total_phases: 3
-  completed_phases: 3
+  total_phases: 2
+  completed_phases: 1
   total_plans: 6
-  completed_plans: 6
+  completed_plans: 4
   percent: 100
 ---
 
@@ -47,16 +46,23 @@ Progress: [██████████] 100%
 | 02-distribution P01 | 2 min | 2 tasks | 4 files |
 | 02-distribution P02 | 1 min | 1 task | 1 file |
 | 03-cicd-and-release P01 | 10 min | 2 tasks | 2 files |
+| Phase 01-review-fixes P02 | 4 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
 ### Decisions
 
 See PROJECT.md Key Decisions table (9 decisions, all ✓ Good).
+- [Phase 01-02]: Keep sync/atomic import for local callCount in TestReceiverReconnectsOnStreamError (still uses atomic int32)
+- [Phase 01-02]: componenttest.NewNopHost() promoted to direct dependency via go mod tidy
 
 ### Pending Todos
 
 None.
+
+### Roadmap Evolution
+
+- Phase 1 added: Review fixes — validate and fix issues from milestone 1 code review
 
 ### Blockers/Concerns
 
@@ -64,6 +70,6 @@ None — milestone shipped.
 
 ## Session Continuity
 
-Last session: 2026-03-18
-Stopped at: Milestone v1.0 complete
+Last session: 2026-03-18T17:21:45.760Z
+Stopped at: Completed 01-02-PLAN.md
 Resume file: None
