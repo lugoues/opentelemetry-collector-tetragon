@@ -29,7 +29,8 @@ func (c *Config) Validate() error {
 	return c.Retry.Validate()
 }
 
-// createDefaultConfig creates the default configuration for the tetragon receiver.
+// createDefaultConfig returns a *Config with sensible defaults for local development:
+// endpoint localhost:54321, TLS disabled, retry enabled with 1s initial / 30s max backoff.
 func createDefaultConfig() component.Config {
 	cfg := configgrpc.NewDefaultClientConfig()
 	cfg.Endpoint = "localhost:54321"

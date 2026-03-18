@@ -72,9 +72,22 @@ func (r *tetragonReceiver) Start(ctx context.Context, host component.Host) error
 
 // Shutdown cancels the stream context, waits for the goroutine to exit,
 // and closes the gRPC connection. Safe to call before Start (no-op cancel guard).
-func (r *tetragonReceiver) Shutdown(_ context.Context) error {
+func (r *tetragonReceiver) Shutdown(ctx context.Context) error {
 	r.cancel()
-	r.wg.Wait()
+
+	// Wait for the goroutine to exit, but respect the shutdown context deadline
+	// so we don't hang indefinitely if the downstream consumer is broken.
+	done := make(chan struct{})
+	go func() {
+		r.wg.Wait()
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-ctx.Done():
+		r.logger.Warn("shutdown deadline exceeded, goroutine may still be running")
+	}
+
 	if r.conn != nil {
 		return r.conn.Close()
 	}
@@ -101,6 +114,15 @@ func (r *tetragonReceiver) streamEvents(ctx context.Context) {
 	b.InitialInterval = r.cfg.Retry.InitialInterval
 	b.MaxInterval = r.cfg.Retry.MaxInterval
 
+	// In cenkalti/backoff/v5, MaxElapsedTime was removed from the struct.
+	// Enforce it via a deadline on the retry context instead.
+	retryCtx := ctx
+	if r.cfg.Retry.MaxElapsedTime > 0 {
+		var retryCancel context.CancelFunc
+		retryCtx, retryCancel = context.WithTimeout(ctx, r.cfg.Retry.MaxElapsedTime)
+		defer retryCancel()
+	}
+
 	for {
 		if ctx.Err() != nil {
 			close(eventCh)
@@ -112,6 +134,26 @@ func (r *tetragonReceiver) streamEvents(ctx context.Context) {
 		err := r.runStream(ctx, eventCh)
 		if ctx.Err() != nil {
 			// Clean shutdown — do not reconnect.
+			close(eventCh)
+			consumeWg.Wait()
+			return
+		}
+
+		// If retry is disabled, fail permanently on the first stream error.
+		if !r.cfg.Retry.Enabled {
+			r.logger.Error("stream failed and retry is disabled", zap.Error(err))
+			componentstatus.ReportStatus(r.host,
+				componentstatus.NewPermanentErrorEvent(err))
+			close(eventCh)
+			consumeWg.Wait()
+			return
+		}
+
+		// Check if the max elapsed time has been exceeded.
+		if retryCtx.Err() != nil {
+			r.logger.Error("max elapsed time reached, giving up", zap.Error(err))
+			componentstatus.ReportStatus(r.host,
+				componentstatus.NewPermanentErrorEvent(err))
 			close(eventCh)
 			consumeWg.Wait()
 			return
@@ -137,6 +179,13 @@ func (r *tetragonReceiver) streamEvents(ctx context.Context) {
 
 		select {
 		case <-ctx.Done():
+			close(eventCh)
+			consumeWg.Wait()
+			return
+		case <-retryCtx.Done():
+			r.logger.Error("max elapsed time reached during backoff wait", zap.Error(err))
+			componentstatus.ReportStatus(r.host,
+				componentstatus.NewPermanentErrorEvent(err))
 			close(eventCh)
 			consumeWg.Wait()
 			return

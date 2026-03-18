@@ -1,0 +1,10 @@
+.git
+.github
+.planning
+.claude
+.devcontainer
+.mise
+*.md
+!README.md
+milestone*.md
+SPEC.md
