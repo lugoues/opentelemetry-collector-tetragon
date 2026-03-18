@@ -1,6 +1,8 @@
 package tetragonreceiver
 
 import (
+	"bytes"
+	"encoding/json"
 	"time"
 
 	tetragonv1 "github.com/cilium/tetragon/api/v1/tetragon"
@@ -12,6 +14,7 @@ import (
 // jsonMarshaler marshals Tetragon proto messages using proto field names (snake_case).
 // UseProtoNames: true is critical — without it, protojson uses camelCase which breaks
 // OpenObserve queries that expect Tetragon's native JSON format.
+// EmitUnpopulated: false (default) omits zero-value fields for compact output.
 var jsonMarshaler = protojson.MarshalOptions{UseProtoNames: true}
 
 // convertEvent converts a single Tetragon GetEventsResponse into a plog.Logs containing
@@ -30,11 +33,18 @@ func convertEvent(resp *tetragonv1.GetEventsResponse) plog.Logs {
 	lr.SetObservedTimestamp(pcommon.NewTimestampFromTime(time.Now()))
 
 	// Body: protojson marshal of the full GetEventsResponse.
-	body, err := jsonMarshaler.Marshal(resp)
+	// json.Compact normalizes whitespace — protojson's output format is not
+	// guaranteed to be stable across calls, so we compact to canonical form.
+	raw, err := jsonMarshaler.Marshal(resp)
 	if err != nil {
 		lr.Body().SetStr("error marshaling event: " + err.Error())
 	} else {
-		lr.Body().SetStr(string(body))
+		var buf bytes.Buffer
+		if compactErr := json.Compact(&buf, raw); compactErr != nil {
+			lr.Body().SetStr(string(raw))
+		} else {
+			lr.Body().SetStr(buf.String())
+		}
 	}
 
 	// Severity: based on event type.

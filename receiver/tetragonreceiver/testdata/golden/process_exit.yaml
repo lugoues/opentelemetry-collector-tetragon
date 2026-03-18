@@ -43,8 +43,8 @@ resourceLogs:
                 value:
                   stringValue: SIGKILL
             body:
-              stringValue: '{"process_exit":{"process":{"exec_id":"exit-test-id-12345", "pid":5678, "uid":1000, "cwd":"/tmp", "binary":"/usr/bin/sleep", "arguments":"10"}, "parent":{"exec_id":"exit-parent-id-99999", "pid":5000, "binary":"/bin/sh"}, "signal":"SIGKILL", "status":137}, "node_name":"worker-1", "time":"2026-03-18T10:01:00Z"}'
-            observedTimeUnixNano: "1773809446655167386"
+              stringValue: '{"process_exit":{"process":{"exec_id":"exit-test-id-12345","pid":5678,"uid":1000,"cwd":"/tmp","binary":"/usr/bin/sleep","arguments":"10"},"parent":{"exec_id":"exit-parent-id-99999","pid":5000,"binary":"/bin/sh"},"signal":"SIGKILL","status":137},"node_name":"worker-1","time":"2026-03-18T10:01:00Z"}'
+            observedTimeUnixNano: "1773854528120874356"
             severityNumber: 9
             severityText: INFO
             timeUnixNano: "1773828060000000000"
