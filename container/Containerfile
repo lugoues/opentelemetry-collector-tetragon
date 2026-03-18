@@ -13,9 +13,14 @@ RUN builder \
     --skip-strict-versioning
 
 # --- Runtime stage ---
-FROM gcr.io/distroless/static-debian12:nonroot
+# Use :latest (root) base, then set USER to a low UID.
+# :nonroot uses UID 65534, which forces podman UserNS=auto to map 65535+ UIDs.
+# UID 1000 keeps the mapping small (1001 UIDs).
+FROM gcr.io/distroless/static-debian12:latest
 
 COPY --from=builder /tmp/dist/otelcol-tetragon /usr/local/bin/otelcol-tetragon
+
+USER 1000:1000
 
 EXPOSE 13133
 
