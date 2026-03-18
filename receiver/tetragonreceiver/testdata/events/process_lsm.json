@@ -1,0 +1,16 @@
+{
+  "process_lsm": {
+    "process": {
+      "exec_id": "lsm-test-id-66666",
+      "pid": 6666,
+      "binary": "/usr/bin/chmod",
+      "arguments": "777 /etc/passwd",
+      "cwd": "/"
+    },
+    "policy_name": "lsm-file-audit",
+    "action": "KPROBE_ACTION_POST",
+    "function_name": "file_permission"
+  },
+  "node_name": "worker-1",
+  "time": "2026-03-18T10:06:00Z"
+}
