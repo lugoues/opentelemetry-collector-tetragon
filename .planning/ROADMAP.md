@@ -42,7 +42,7 @@ Plans:
   1. `ocb --config distribution/builder-config.yaml` produces a binary that starts without error and registers the tetragonreceiver component alongside journaldreceiver, batch, resourcedetection, otlphttp, health_check, and file_storage
   2. The container image starts and the health_check endpoint responds 200 when given the example `rootfs/etc/otelcol/config.yaml` without any volume mounts or special permissions beyond the otel:10001 user
   3. The container image is a drop-in replacement: same entrypoint path, config path, and runtime user as the current otelcol-contrib image
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
 - [ ] 02-01-PLAN.md — OCB manifest, top-level go.mod, example config, mise tasks
 - [ ] 02-02-PLAN.md — Multi-stage Containerfile for build and runtime
@@ -66,5 +66,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Receiver Module | 3/3 | Complete   | 2026-03-18 |
-| 2. Distribution | 0/2 | Planning complete | - |
+| 2. Distribution | 1/2 | In Progress|  |
 | 3. CI/CD and Release | 0/TBD | Not started | - |
