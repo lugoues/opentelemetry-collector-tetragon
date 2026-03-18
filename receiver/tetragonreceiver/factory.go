@@ -6,7 +6,7 @@ import (
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/receiver"
-	"go.uber.org/zap"
+	"go.opentelemetry.io/collector/receiver/receiverhelper"
 )
 
 const componentType = "tetragon"
@@ -20,30 +20,6 @@ func NewFactory() receiver.Factory {
 	)
 }
 
-// tetragonReceiver is the receiver implementation.
-// The full implementation (gRPC streaming) is provided in Plan 03.
-type tetragonReceiver struct {
-	cfg      *Config
-	logger   *zap.Logger
-	consumer consumer.Logs
-	// cancel is initialized to a no-op in the factory to guard against
-	// Shutdown-before-Start being called (pre-phase decision, Pitfall 6).
-	cancel context.CancelFunc
-}
-
-// Start begins receiving events from Tetragon.
-// Full implementation provided in Plan 03.
-func (r *tetragonReceiver) Start(_ context.Context, _ component.Host) error {
-	return nil
-}
-
-// Shutdown stops the receiver.
-// The no-op cancel guard ensures this is safe to call before Start.
-func (r *tetragonReceiver) Shutdown(_ context.Context) error {
-	r.cancel()
-	return nil
-}
-
 func createLogsReceiver(
 	_ context.Context,
 	settings receiver.Settings,
@@ -51,10 +27,22 @@ func createLogsReceiver(
 	nextConsumer consumer.Logs,
 ) (receiver.Logs, error) {
 	rCfg := cfg.(*Config)
+
+	obsReport, err := receiverhelper.NewObsReport(receiverhelper.ObsReportSettings{
+		ReceiverID:             settings.ID,
+		Transport:              "grpc",
+		ReceiverCreateSettings: settings,
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	return &tetragonReceiver{
-		cfg:      rCfg,
-		logger:   settings.Logger,
-		consumer: nextConsumer,
+		cfg:       rCfg,
+		settings:  settings, // stored for ToClientConn telemetry settings
+		logger:    settings.Logger,
+		consumer:  nextConsumer,
+		obsReport: obsReport,
 		// Initialize to no-op so Shutdown-before-Start is safe (Pitfall 6).
 		cancel: func() {},
 	}, nil
