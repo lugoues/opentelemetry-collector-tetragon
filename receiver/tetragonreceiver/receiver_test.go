@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/component/componenttest"
 	"go.opentelemetry.io/collector/consumer/consumertest"
 	"go.opentelemetry.io/collector/receiver/receivertest"
 	"google.golang.org/grpc"
@@ -27,7 +28,7 @@ type mockGetEventsClient struct {
 	responses []*tetragonv1.GetEventsResponse
 	idx       int
 	err       error
-	blockOnce bool // if true, block after returning all responses
+	blockCtx  context.Context // non-nil: block until Done instead of returning EOF
 }
 
 // Recv returns the next response or blocks/errors per configuration.
@@ -46,9 +47,9 @@ func (m *mockGetEventsClient) Recv() (*tetragonv1.GetEventsResponse, error) {
 	}
 	m.mu.Unlock()
 
-	if m.blockOnce {
-		// Block until context cancelled — simulates a long-running stream.
-		time.Sleep(30 * time.Second)
+	if m.blockCtx != nil {
+		<-m.blockCtx.Done()
+		return nil, m.blockCtx.Err()
 	}
 	return nil, io.EOF
 }
@@ -66,7 +67,7 @@ type mockTetragonClient struct {
 	mu           sync.Mutex
 	stream       tetragonv1.FineGuidanceSensors_GetEventsClient
 	getEventsErr error
-	callCount    int32 // atomic
+	callCount    int
 }
 
 func (m *mockTetragonClient) GetEvents(_ context.Context, _ *tetragonv1.GetEventsRequest, _ ...grpc.CallOption) (
@@ -74,7 +75,7 @@ func (m *mockTetragonClient) GetEvents(_ context.Context, _ *tetragonv1.GetEvent
 ) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	atomic.AddInt32(&m.callCount, 1)
+	m.callCount++
 	if m.getEventsErr != nil {
 		return nil, m.getEventsErr
 	}
@@ -123,13 +124,15 @@ func waitForLogs(t *testing.T, sink *consumertest.LogsSink, minRecords int, time
 // TestReceiverStartShutdown verifies Start() returns immediately (non-blocking)
 // and Shutdown() completes cleanly.
 func TestReceiverStartShutdown(t *testing.T) {
-	// A stream that blocks indefinitely, simulating a long-running gRPC stream.
-	streamClient := &mockGetEventsClient{blockOnce: true}
+	blockCtx, blockCancel := context.WithCancel(context.Background())
+	defer blockCancel()
+
+	streamClient := &mockGetEventsClient{blockCtx: blockCtx}
 	mockClient := &mockTetragonClient{stream: streamClient}
 
 	r, _ := newTestReceiver(t, mockClient)
 
-	err := r.Start(context.Background(), newNopHost())
+	err := r.Start(context.Background(), componenttest.NewNopHost())
 	require.NoError(t, err, "Start should return nil immediately")
 
 	done := make(chan error, 1)
@@ -159,15 +162,15 @@ func TestReceiverShutdownBeforeStart(t *testing.T) {
 // are forwarded through the buffered channel to the consumer.
 func TestReceiverStreamEvents(t *testing.T) {
 	responses := []*tetragonv1.GetEventsResponse{
-		makeExecResponse("/bin/test1", 1),
-		makeExecResponse("/bin/test2", 2),
-		makeExecResponse("/bin/test3", 3),
+		makeExecResponse("/bin/test1"),
+		makeExecResponse("/bin/test2"),
+		makeExecResponse("/bin/test3"),
 	}
 	streamClient := &mockGetEventsClient{responses: responses}
 	mockClient := &mockTetragonClient{stream: streamClient}
 
 	r, sink := newTestReceiver(t, mockClient)
-	require.NoError(t, r.Start(context.Background(), newNopHost()))
+	require.NoError(t, r.Start(context.Background(), componenttest.NewNopHost()))
 
 	ok := waitForLogs(t, sink, 3, 5*time.Second)
 	assert.True(t, ok, "expected 3 log records, got %d", totalRecords(sink))
@@ -180,7 +183,7 @@ func TestReceiverStreamEvents(t *testing.T) {
 func TestReceiverReconnectsOnStreamError(t *testing.T) {
 	// First call returns error; second returns a stream with one event.
 	successStream := &mockGetEventsClient{responses: []*tetragonv1.GetEventsResponse{
-		makeExecResponse("/bin/curl", 42),
+		makeExecResponse("/bin/curl"),
 	}}
 
 	var callCount int32
@@ -197,7 +200,7 @@ func TestReceiverReconnectsOnStreamError(t *testing.T) {
 	}
 
 	r, sink := newTestReceiver(t, client)
-	require.NoError(t, r.Start(context.Background(), newNopHost()))
+	require.NoError(t, r.Start(context.Background(), componenttest.NewNopHost()))
 
 	ok := waitForLogs(t, sink, 1, 10*time.Second)
 	assert.True(t, ok, "expected 1 log record after reconnect")
@@ -213,7 +216,7 @@ func TestReceiverCleanShutdownDuringBackoff(t *testing.T) {
 	client := &mockTetragonClient{getEventsErr: io.ErrUnexpectedEOF}
 
 	r, _ := newTestReceiver(t, client)
-	require.NoError(t, r.Start(context.Background(), newNopHost()))
+	require.NoError(t, r.Start(context.Background(), componenttest.NewNopHost()))
 
 	// Give the receiver time to enter backoff.
 	time.Sleep(100 * time.Millisecond)
@@ -234,13 +237,13 @@ func TestReceiverCleanShutdownDuringBackoff(t *testing.T) {
 // TestReceiverConsumesLogs verifies event attributes flow through the pipeline correctly.
 func TestReceiverConsumesLogs(t *testing.T) {
 	responses := []*tetragonv1.GetEventsResponse{
-		makeExecResponse("/usr/bin/curl", 100),
+		makeExecResponse("/usr/bin/curl"),
 	}
 	streamClient := &mockGetEventsClient{responses: responses}
 	mockClient := &mockTetragonClient{stream: streamClient}
 
 	r, sink := newTestReceiver(t, mockClient)
-	require.NoError(t, r.Start(context.Background(), newNopHost()))
+	require.NoError(t, r.Start(context.Background(), componenttest.NewNopHost()))
 
 	ok := waitForLogs(t, sink, 1, 5*time.Second)
 	require.True(t, ok, "expected 1 log record")
@@ -267,7 +270,7 @@ func TestReceiverConsumesLogs(t *testing.T) {
 // ---- Helpers ----
 
 // makeExecResponse creates a minimal GetEventsResponse with a ProcessExec event.
-func makeExecResponse(binary string, pid uint32) *tetragonv1.GetEventsResponse {
+func makeExecResponse(binary string) *tetragonv1.GetEventsResponse {
 	return &tetragonv1.GetEventsResponse{
 		Event: &tetragonv1.GetEventsResponse_ProcessExec{
 			ProcessExec: &tetragonv1.ProcessExec{
@@ -299,14 +302,3 @@ func (m *mockTetragonClientFn) GetEvents(ctx context.Context, in *tetragonv1.Get
 ) {
 	return m.fn(ctx, in, opts...)
 }
-
-// nopHost is a minimal component.Host for tests.
-type nopHost struct{}
-
-func newNopHost() component.Host { return &nopHost{} }
-
-func (h *nopHost) ReportFatalError(_ error)                            {}
-func (h *nopHost) GetFactory(_ component.Kind, _ component.Type) component.Factory {
-	return nil
-}
-func (h *nopHost) GetExtensions() map[component.ID]component.Component { return nil }
