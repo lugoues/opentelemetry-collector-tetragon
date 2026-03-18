@@ -1,0 +1,13 @@
+{
+  "process_loader": {
+    "process": {
+      "exec_id": "loader-test-id-44444",
+      "pid": 4444,
+      "binary": "/usr/lib/ld-linux.so",
+      "cwd": "/"
+    },
+    "path": "/usr/lib/libc.so.6"
+  },
+  "node_name": "worker-1",
+  "time": "2026-03-18T10:04:00Z"
+}

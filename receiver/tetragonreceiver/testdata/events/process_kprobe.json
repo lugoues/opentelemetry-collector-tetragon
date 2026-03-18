@@ -1,0 +1,16 @@
+{
+  "process_kprobe": {
+    "process": {
+      "exec_id": "kprobe-test-id-11111",
+      "pid": 2222,
+      "binary": "/usr/bin/cat",
+      "arguments": "/etc/shadow",
+      "cwd": "/"
+    },
+    "policy_name": "file-access-monitor",
+    "action": "KPROBE_ACTION_POST",
+    "function_name": "security_file_open"
+  },
+  "node_name": "worker-2",
+  "time": "2026-03-18T10:02:00Z"
+}

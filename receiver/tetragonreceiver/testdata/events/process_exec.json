@@ -1,0 +1,29 @@
+{
+  "process_exec": {
+    "process": {
+      "exec_id": "a2luZC1jb250cm9sLXBsYW5lOjEyMzQ1",
+      "pid": 1234,
+      "uid": 0,
+      "cwd": "/",
+      "binary": "/usr/bin/curl",
+      "arguments": "https://example.com",
+      "start_time": "2026-03-18T10:00:00Z",
+      "pod": {
+        "namespace": "default",
+        "name": "nginx-7b4f8d6c5-x9k2m",
+        "container": {
+          "name": "nginx"
+        }
+      },
+      "parent_exec_id": "a2luZC1jb250cm9sLXBsYW5lOjk4NzY1"
+    },
+    "parent": {
+      "exec_id": "a2luZC1jb250cm9sLXBsYW5lOjk4NzY1",
+      "pid": 1000,
+      "binary": "/bin/bash",
+      "cwd": "/home/user"
+    }
+  },
+  "node_name": "worker-1",
+  "time": "2026-03-18T10:00:00.123456789Z"
+}

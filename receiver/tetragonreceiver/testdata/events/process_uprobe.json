@@ -1,0 +1,15 @@
+{
+  "process_uprobe": {
+    "process": {
+      "exec_id": "uprobe-test-id-55555",
+      "pid": 5555,
+      "binary": "/usr/bin/python3",
+      "cwd": "/app"
+    },
+    "policy_name": "ssl-monitor",
+    "action": "KPROBE_ACTION_POST",
+    "symbol": "SSL_write"
+  },
+  "node_name": "worker-1",
+  "time": "2026-03-18T10:05:00Z"
+}
