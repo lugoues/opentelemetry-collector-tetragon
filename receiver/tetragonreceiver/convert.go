@@ -52,6 +52,9 @@ func convertEvent(resp *tetragonv1.GetEventsResponse) plog.Logs {
 
 	// Attributes.
 	attrs := lr.Attributes()
+	// Receiver-specific attributes (not OTel semantic conventions).
+	// event.domain and event.name follow the OTel event model naming pattern
+	// but are not part of the official semantic conventions registry.
 	attrs.PutStr("event.domain", "tetragon")
 	attrs.PutStr("event.name", eventTypeName(resp))
 

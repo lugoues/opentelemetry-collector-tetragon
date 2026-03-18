@@ -22,6 +22,9 @@ COPY --from=builder /tmp/dist/otelcol-tetragon /usr/local/bin/otelcol-tetragon
 
 USER 1000:1000
 
+# Health check: The OTel Collector health_check extension listens on port 13133.
+# Distroless images have no shell, wget, or curl — Dockerfile HEALTHCHECK cannot
+# work. Use Kubernetes readiness/liveness probes targeting port 13133 instead.
 EXPOSE 13133
 
 ENTRYPOINT ["/usr/local/bin/otelcol-tetragon"]
