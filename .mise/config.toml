@@ -1,3 +1,22 @@
 [tools]
-bun = "latest"
-go = "prefix:1.20"
+go = "1.25"
+
+[tasks.test]
+description = "Run receiver unit tests with race detector"
+run = "go test -race ./..."
+dir = "receiver/tetragonreceiver"
+
+[tasks.lint]
+description = "Run go vet on receiver module"
+run = "go vet ./..."
+dir = "receiver/tetragonreceiver"
+
+[tasks.build]
+description = "Build receiver module"
+run = "go build ./..."
+dir = "receiver/tetragonreceiver"
+
+[tasks.tidy]
+description = "Tidy receiver module dependencies"
+run = "go mod tidy"
+dir = "receiver/tetragonreceiver"
