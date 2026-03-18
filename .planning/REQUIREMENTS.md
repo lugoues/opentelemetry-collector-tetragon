@@ -25,16 +25,16 @@
 
 ### Event Conversion
 
-- [ ] **CONV-01**: Each `GetEventsResponse` becomes one `plog.LogRecord` with scope name `tetragonreceiver`
-- [ ] **CONV-02**: Log body contains full JSON via `protojson.Marshal` matching Tetragon's own JSON export format
-- [ ] **CONV-03**: Timestamp set from event's time field (not wall clock); ObservedTimestamp set to receive time
-- [ ] **CONV-04**: Severity mapped per event type: INFO for exec/exit/loader, WARN for kprobe/tracepoint/lsm with action, ERROR for throttle/rate_limit
-- [ ] **CONV-05**: Static attributes set: `event.domain`=`tetragon`, `event.name`=event type string
-- [ ] **CONV-06**: Process attributes extracted: binary, arguments, pid, uid, exec_id, cwd
-- [ ] **CONV-07**: Parent process attributes extracted when present: binary, pid, exec_id
-- [ ] **CONV-08**: Event-specific attributes extracted: policy_name, action, function_name (kprobe), subsys/event (tracepoint), exit status/signal
-- [ ] **CONV-09**: Kubernetes attributes extracted when pod info present: k8s.namespace.name, k8s.pod.name, k8s.container.name
-- [ ] **CONV-10**: All Tetragon event types handled: exec, exit, kprobe, tracepoint, loader, uprobe, lsm, usdt, throttle, rate_limit_info
+- [x] **CONV-01**: Each `GetEventsResponse` becomes one `plog.LogRecord` with scope name `tetragonreceiver`
+- [x] **CONV-02**: Log body contains full JSON via `protojson.Marshal` matching Tetragon's own JSON export format
+- [x] **CONV-03**: Timestamp set from event's time field (not wall clock); ObservedTimestamp set to receive time
+- [x] **CONV-04**: Severity mapped per event type: INFO for exec/exit/loader, WARN for kprobe/tracepoint/lsm with action, ERROR for throttle/rate_limit
+- [x] **CONV-05**: Static attributes set: `event.domain`=`tetragon`, `event.name`=event type string
+- [x] **CONV-06**: Process attributes extracted: binary, arguments, pid, uid, exec_id, cwd
+- [x] **CONV-07**: Parent process attributes extracted when present: binary, pid, exec_id
+- [x] **CONV-08**: Event-specific attributes extracted: policy_name, action, function_name (kprobe), subsys/event (tracepoint), exit status/signal
+- [x] **CONV-09**: Kubernetes attributes extracted when pod info present: k8s.namespace.name, k8s.pod.name, k8s.container.name
+- [x] **CONV-10**: All Tetragon event types handled: exec, exit, kprobe, tracepoint, loader, uprobe, lsm, usdt, throttle, rate_limit_info
 
 ### Distribution
 
@@ -98,16 +98,16 @@
 | CONF-02 | Phase 1 | Complete |
 | CONF-03 | Phase 1 | Complete |
 | CONF-04 | Phase 1 | Complete |
-| CONV-01 | Phase 1 | Pending |
-| CONV-02 | Phase 1 | Pending |
-| CONV-03 | Phase 1 | Pending |
-| CONV-04 | Phase 1 | Pending |
-| CONV-05 | Phase 1 | Pending |
-| CONV-06 | Phase 1 | Pending |
-| CONV-07 | Phase 1 | Pending |
-| CONV-08 | Phase 1 | Pending |
-| CONV-09 | Phase 1 | Pending |
-| CONV-10 | Phase 1 | Pending |
+| CONV-01 | Phase 1 | Complete |
+| CONV-02 | Phase 1 | Complete |
+| CONV-03 | Phase 1 | Complete |
+| CONV-04 | Phase 1 | Complete |
+| CONV-05 | Phase 1 | Complete |
+| CONV-06 | Phase 1 | Complete |
+| CONV-07 | Phase 1 | Complete |
+| CONV-08 | Phase 1 | Complete |
+| CONV-09 | Phase 1 | Complete |
+| CONV-10 | Phase 1 | Complete |
 | DIST-01 | Phase 2 | Pending |
 | DIST-02 | Phase 2 | Pending |
 | DIST-03 | Phase 2 | Pending |

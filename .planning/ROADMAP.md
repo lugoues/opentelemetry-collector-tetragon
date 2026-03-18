@@ -28,7 +28,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. A synthetic gRPC stream delivering all 10 Tetragon event types (exec, exit, kprobe, tracepoint, loader, uprobe, lsm, usdt, throttle, rate_limit_info) produces one LogRecord per event with correct body, severity, timestamps, and extracted attributes
   4. Calling `Shutdown()` while the stream is active (or before `Start()`) terminates cleanly without blocking, hanging, or triggering reconnects
   5. Config validation rejects an empty endpoint and invalid TLS paths at startup without connecting to any remote
-**Plans:** 3 plans
+**Plans:** 2/3 plans executed
 Plans:
 - [ ] 01-01-PLAN.md — Scaffold Go module with config, factory, metadata, and mise.toml
 - [ ] 01-02-PLAN.md — Event-to-LogRecord converter for all 10 Tetragon event types
@@ -62,6 +62,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Receiver Module | 0/3 | Planning complete | - |
+| 1. Receiver Module | 2/3 | In Progress|  |
 | 2. Distribution | 0/TBD | Not started | - |
 | 3. CI/CD and Release | 0/TBD | Not started | - |

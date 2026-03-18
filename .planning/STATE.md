@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-receiver-module 01-01-PLAN.md
-last_updated: "2026-03-18T04:35:07.071Z"
+stopped_at: Completed 01-receiver-module 01-02-PLAN.md
+last_updated: "2026-03-18T04:45:25.232Z"
 last_activity: "2026-03-18 — Plan 01-01 complete: tetragonreceiver module scaffold"
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -51,6 +51,7 @@ Progress: [░░░░░░░░░░] 0%
 
 *Updated after each plan completion*
 | Phase 01-receiver-module P01 | 35 | 2 tasks | 11 files |
+| Phase 01-receiver-module P02 | 30 | 2 tasks | 24 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,9 @@ Recent decisions affecting current work:
 - [Phase 01-receiver-module]: Go 1.25 required: tetragon/api v1.6.0 and OTel v1.54.0 both declare go 1.25.0 minimum — plan's go 1.24 was incorrect
 - [Phase 01-receiver-module]: consumer/consumertest at v0.148.0 (unstable track) not v1.54.0 — plan had incorrect version
 - [Phase 01-receiver-module]: confmap.WithIgnoreUnused() needed in YAML tests for squash-embedded configgrpc.ClientConfig fields
+- [Phase 01-receiver-module]: UInt32Value wrapper fields serialize as plain JSON numbers in protojson v2 (not {value: N})
+- [Phase 01-receiver-module]: ProcessUprobe uses GetSymbol() not GetFunctionName() — fixture uses symbol field
+- [Phase 01-receiver-module]: golden.WriteLogsToFile with UPDATE_GOLDEN env guard replaces golden.WriteLogs which always fails
 
 ### Pending Todos
 
@@ -78,6 +82,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T04:35:07.069Z
-Stopped at: Completed 01-receiver-module 01-01-PLAN.md
+Last session: 2026-03-18T04:45:25.230Z
+Stopped at: Completed 01-receiver-module 01-02-PLAN.md
 Resume file: None
