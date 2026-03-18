@@ -10,8 +10,8 @@ resourceLogs:
                 value:
                   stringValue: rate_limit_info
             body:
-              stringValue: '{"rate_limit_info":{"number_of_dropped_process_events":"42"},"node_name":"worker-1","time":"2026-03-18T10:09:00Z"}'
-            observedTimeUnixNano: "1773808981904029818"
+              stringValue: '{"rate_limit_info":{"number_of_dropped_process_events":"42"}, "node_name":"worker-1", "time":"2026-03-18T10:09:00Z"}'
+            observedTimeUnixNano: "1773809446660259275"
             severityNumber: 17
             severityText: ERROR
             timeUnixNano: "1773828540000000000"

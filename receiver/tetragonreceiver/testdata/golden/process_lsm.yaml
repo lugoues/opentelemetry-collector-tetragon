@@ -37,8 +37,8 @@ resourceLogs:
                 value:
                   stringValue: file_permission
             body:
-              stringValue: '{"process_lsm":{"process":{"exec_id":"lsm-test-id-66666","pid":6666,"cwd":"/","binary":"/usr/bin/chmod","arguments":"777 /etc/passwd"},"function_name":"file_permission","policy_name":"lsm-file-audit","action":"KPROBE_ACTION_POST"},"node_name":"worker-1","time":"2026-03-18T10:06:00Z"}'
-            observedTimeUnixNano: "1773808981901964067"
+              stringValue: '{"process_lsm":{"process":{"exec_id":"lsm-test-id-66666", "pid":6666, "cwd":"/", "binary":"/usr/bin/chmod", "arguments":"777 /etc/passwd"}, "function_name":"file_permission", "policy_name":"lsm-file-audit", "action":"KPROBE_ACTION_POST"}, "node_name":"worker-1", "time":"2026-03-18T10:06:00Z"}'
+            observedTimeUnixNano: "1773809446658068148"
             severityNumber: 13
             severityText: WARN
             timeUnixNano: "1773828360000000000"
