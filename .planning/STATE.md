@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-receiver-module 01-03-PLAN.md
-last_updated: "2026-03-18T04:56:16.176Z"
+stopped_at: Completed 02-distribution 02-01-PLAN.md
+last_updated: "2026-03-18T13:45:53.554Z"
 last_activity: "2026-03-18 — Plan 01-01 complete: tetragonreceiver module scaffold"
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 5
+  completed_plans: 4
   percent: 0
 ---
 
@@ -53,6 +53,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-receiver-module P01 | 35 | 2 tasks | 11 files |
 | Phase 01-receiver-module P02 | 30 | 2 tasks | 24 files |
 | Phase 01-receiver-module P03 | 25 | 2 tasks | 6 files |
+| Phase 02-distribution P01 | 2 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,10 @@ Recent decisions affecting current work:
 - [Phase 01-receiver-module]: backoff v5 (not v4): go.mod had v5; InitialInterval/MaxInterval set directly, MaxElapsedTime removed from struct in v5
 - [Phase 01-receiver-module]: ToClientConn takes map[component.ID]component.Component (host.GetExtensions()), not component.Host directly — plan had incorrect signature
 - [Phase 01-receiver-module]: r.client != nil guard in Start() enables test injection without real gRPC dial
+- [Phase 02-distribution]: healthcheckextension is in contrib repo not core - wrong path causes module not found
+- [Phase 02-distribution]: output_path /tmp/dist absolute path keeps OCB-generated files outside source tree
+- [Phase 02-distribution]: --skip-strict-versioning required for tetragonreceiver v0.1.0 vs OCB v0.148.0 version train
+- [Phase 02-distribution]: OCB path: ./receiver/tetragonreceiver - must run builder from repo root for correct resolution
 
 ### Pending Todos
 
@@ -86,6 +91,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T04:52:30.818Z
-Stopped at: Completed 01-receiver-module 01-03-PLAN.md
+Last session: 2026-03-18T13:45:53.552Z
+Stopped at: Completed 02-distribution 02-01-PLAN.md
 Resume file: None
