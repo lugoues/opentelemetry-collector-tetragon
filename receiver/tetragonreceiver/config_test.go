@@ -6,9 +6,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/collector/component/componenttest"
 	"go.opentelemetry.io/collector/confmap"
 	"go.opentelemetry.io/collector/confmap/confmaptest"
 )
+
+func TestConfigStruct(t *testing.T) {
+	require.NoError(t, componenttest.CheckConfigStruct(createDefaultConfig()))
+}
 
 func TestConfigValidate_EmptyEndpoint(t *testing.T) {
 	cfg := &Config{}
