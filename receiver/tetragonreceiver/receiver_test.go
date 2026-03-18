@@ -303,6 +303,84 @@ func TestReceiverRetryDisabled(t *testing.T) {
 	assert.Equal(t, int32(1), callCount.Load(), "should only attempt one connection when retry is disabled")
 }
 
+// TestReceiverMaxElapsedTime verifies that a non-zero MaxElapsedTime causes the
+// receiver to stop retrying after the configured duration. The streamEvents
+// goroutine should exit on its own without Shutdown being called.
+func TestReceiverMaxElapsedTime(t *testing.T) {
+	var callCount atomic.Int32
+	client := &mockTetragonClientFn{
+		fn: func(_ context.Context, _ *tetragonv1.GetEventsRequest, _ ...grpc.CallOption) (
+			tetragonv1.FineGuidanceSensors_GetEventsClient, error,
+		) {
+			callCount.Add(1)
+			return nil, io.ErrUnexpectedEOF
+		},
+	}
+
+	r, _ := newTestReceiver(t, client)
+	r.cfg.Retry.Enabled = true
+	r.cfg.Retry.InitialInterval = 10 * time.Millisecond
+	r.cfg.Retry.MaxInterval = 50 * time.Millisecond
+	r.cfg.Retry.MaxElapsedTime = 500 * time.Millisecond
+	require.NoError(t, r.Start(context.Background(), componenttest.NewNopHost()))
+
+	// Wait for the goroutine to exit on its own (MaxElapsedTime exceeded).
+	// The wg.Wait() will return once streamEvents exits.
+	exited := make(chan struct{})
+	go func() {
+		r.wg.Wait()
+		close(exited)
+	}()
+
+	select {
+	case <-exited:
+		// streamEvents exited on its own due to MaxElapsedTime.
+	case <-time.After(5 * time.Second):
+		t.Fatal("streamEvents did not exit after MaxElapsedTime")
+	}
+
+	// Should have retried multiple times before giving up.
+	calls := callCount.Load()
+	assert.Greater(t, calls, int32(1), "should have retried at least once before MaxElapsedTime")
+	assert.Less(t, calls, int32(200), "should have stopped retrying after MaxElapsedTime")
+
+	// Clean up — Shutdown should be a no-op now.
+	require.NoError(t, r.Shutdown(context.Background()))
+}
+
+// TestReceiverShutdownRespectsContext verifies that Shutdown returns promptly when
+// its context deadline is reached, even if the goroutine hasn't finished.
+func TestReceiverShutdownRespectsContext(t *testing.T) {
+	// Create a stream that blocks forever, simulating a stuck downstream.
+	blockCtx, blockCancel := context.WithCancel(context.Background())
+	defer blockCancel()
+
+	streamClient := &mockGetEventsClient{blockCtx: blockCtx}
+	mockClient := &mockTetragonClient{stream: streamClient}
+
+	r, _ := newTestReceiver(t, mockClient)
+	require.NoError(t, r.Start(context.Background(), componenttest.NewNopHost()))
+
+	// Shutdown with a very short deadline.
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer shutdownCancel()
+
+	done := make(chan error, 1)
+	go func() {
+		done <- r.Shutdown(shutdownCtx)
+	}()
+
+	select {
+	case <-done:
+		// Shutdown returned — it respected the context deadline.
+	case <-time.After(2 * time.Second):
+		t.Fatal("Shutdown blocked beyond context deadline")
+	}
+
+	// Clean up: unblock the stream so the goroutine can exit.
+	blockCancel()
+}
+
 // TestReceiverConsumesLogs verifies event attributes flow through the pipeline correctly.
 func TestReceiverConsumesLogs(t *testing.T) {
 	responses := []*tetragonv1.GetEventsResponse{
