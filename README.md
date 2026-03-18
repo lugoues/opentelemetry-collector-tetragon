@@ -42,23 +42,24 @@ An example config is included at [`container/rootfs/etc/otelcol/config.yaml`](co
 
 ### Environment Variables
 
-The OTel Collector supports `${env:VAR_NAME}` substitution in config files. Use this for secrets and deployment-specific values:
+The OTel Collector supports `${env:VAR_NAME}` substitution in config files. The [example config](container/rootfs/etc/otelcol/config.yaml) uses these variables:
 
-```yaml
-exporters:
-  otlphttp/openobserve:
-    endpoint: ${env:OTEL_EXPORTER_ENDPOINT}
-    headers:
-      Authorization: Basic ${env:OTEL_AUTH}
-```
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `TETRAGON_ENDPOINT` | Tetragon gRPC server address | `tetragon.kube-system.svc:54321` |
+| `OTEL_EXPORTER_ENDPOINT` | OTLP/HTTP exporter endpoint | `http://openobserve:5080/api/default` |
+| `OTEL_AUTH` | Base64-encoded `user:password` for exporter auth header | `dXNlcjpwYXNz` |
 
 ```bash
 docker run --rm \
+  -e TETRAGON_ENDPOINT=tetragon.kube-system.svc:54321 \
   -e OTEL_EXPORTER_ENDPOINT=http://openobserve:5080/api/default \
   -e OTEL_AUTH=dXNlcjpwYXNz \
   -v ./config.yaml:/etc/otelcol/config.yaml \
   ghcr.io/cilium/otelcol-tetragon:latest
 ```
+
+You can define your own env vars in custom config files using the same `${env:VAR_NAME}` syntax.
 
 ### CLI Flags
 
