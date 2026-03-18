@@ -115,17 +115,15 @@ func (r *tetragonReceiver) streamEvents(ctx context.Context) {
 			return
 		}
 
+		// Stream had connected (or at least attempted); reset backoff so next
+		// retry starts from InitialInterval instead of accumulating.
+		b.Reset()
+
 		// Transient error — report and schedule retry.
 		componentstatus.ReportStatus(r.host,
 			componentstatus.NewRecoverableErrorEvent(err))
 
 		wait := b.NextBackOff()
-		if wait == backoff.Stop {
-			r.logger.Error("max backoff elapsed, stopping stream")
-			close(eventCh)
-			consumeWg.Wait()
-			return
-		}
 
 		r.logger.Warn("stream error, reconnecting",
 			zap.Error(err),
