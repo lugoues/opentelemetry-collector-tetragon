@@ -37,8 +37,8 @@ resourceLogs:
                 value:
                   stringValue: security_file_open
             body:
-              stringValue: '{"process_kprobe":{"process":{"exec_id":"kprobe-test-id-11111", "pid":2222, "cwd":"/", "binary":"/usr/bin/cat", "arguments":"/etc/shadow"}, "function_name":"security_file_open", "action":"KPROBE_ACTION_POST", "policy_name":"file-access-monitor"}, "node_name":"worker-2", "time":"2026-03-18T10:02:00Z"}'
-            observedTimeUnixNano: "1773809446655800598"
+              stringValue: '{"process_kprobe":{"process":{"exec_id":"kprobe-test-id-11111","pid":2222,"cwd":"/","binary":"/usr/bin/cat","arguments":"/etc/shadow"},"function_name":"security_file_open","action":"KPROBE_ACTION_POST","policy_name":"file-access-monitor"},"node_name":"worker-2","time":"2026-03-18T10:02:00Z"}'
+            observedTimeUnixNano: "1773854528121534450"
             severityNumber: 13
             severityText: WARN
             timeUnixNano: "1773828120000000000"
