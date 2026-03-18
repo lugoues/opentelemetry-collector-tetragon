@@ -9,6 +9,7 @@ import (
 	tetragonv1 "github.com/cilium/tetragon/api/v1/tetragon"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/golden"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatatest/plogtest"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -121,6 +122,27 @@ func TestConvertEvent_RateLimitNoProcess(t *testing.T) {
 
 	_, ok := lr.Attributes().Get("tetragon.process.binary")
 	require.False(t, ok, "rate_limit_info should not have tetragon.process.binary attribute")
+}
+
+// TestConvertEvent_UnknownEventType verifies that an unrecognized event type
+// (nil event oneof) is handled gracefully — eventTypeName returns "unknown" and
+// no process/parent attributes are set.
+func TestConvertEvent_UnknownEventType(t *testing.T) {
+	resp := &tetragonv1.GetEventsResponse{} // nil event oneof
+
+	assert.Equal(t, "unknown", eventTypeName(resp))
+	assert.Nil(t, extractProcess(resp))
+	assert.Nil(t, extractParent(resp))
+
+	got := convertEvent(resp)
+	lr := got.ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().At(0)
+
+	eventName, ok := lr.Attributes().Get("event.name")
+	require.True(t, ok)
+	assert.Equal(t, "unknown", eventName.Str())
+
+	_, ok = lr.Attributes().Get("tetragon.process.binary")
+	assert.False(t, ok, "unknown event should not have process attributes")
 }
 
 // TestFixtures_Unmarshal verifies that all 10 JSON fixtures can be successfully
