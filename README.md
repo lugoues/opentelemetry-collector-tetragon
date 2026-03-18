@@ -17,7 +17,13 @@ docker pull ghcr.io/cilium/otelcol-tetragon:latest
 docker run --rm -v ./config.yaml:/etc/otelcol/config.yaml ghcr.io/cilium/otelcol-tetragon:latest
 ```
 
-The container runs as non-root user `otel` (UID 10001). The health check extension listens on port 13133.
+The container runs as non-root user `otel` (UID/GID 10001 by default). The health check extension listens on port 13133.
+
+To build with a custom UID/GID:
+
+```bash
+docker build --build-arg UID=1000 --build-arg GID=1000 -f container/Containerfile .
+```
 
 ## Configuration Reference
 
@@ -55,17 +61,49 @@ service:
       exporters: [otlphttp]
 ```
 
-## Build from Source
+An example two-pipeline config (Tetragon + journald) is included at `container/rootfs/etc/otelcol/config.yaml`.
 
-Requirements: Go 1.25+, Docker with Buildx
+## Development Setup
+
+### Prerequisites
+
+Install [mise](https://mise.jdx.dev/) (runtime manager):
 
 ```bash
-# Run tests
-cd receiver/tetragonreceiver
-go test ./...
+curl https://mise.run | sh
+```
 
-# Build multi-arch image
-docker buildx build --platform linux/amd64,linux/arm64 -t otelcol-tetragon:dev -f Containerfile .
+### Getting Started
+
+```bash
+git clone https://github.com/cilium/otelcol-tetragon.git
+cd otelcol-tetragon
+mise install        # installs Go 1.25
+```
+
+### Tasks
+
+All development tasks are available via mise:
+
+```bash
+mise run test       # run receiver tests with race detector
+mise run lint       # run go vet on receiver module
+mise run build      # build receiver module
+mise run tidy       # tidy receiver module dependencies
+mise run ocb        # build custom collector binary (output: /tmp/otelcol-tetragon/)
+mise run container  # build container image (otelcol-tetragon:local)
+mise run smoke      # smoke test: start container, check health, stop
+```
+
+### Building the Container Image
+
+```bash
+# Local image
+mise run container
+
+# Multi-arch image
+docker buildx build --platform linux/amd64,linux/arm64 \
+  -t otelcol-tetragon:dev -f container/Containerfile .
 ```
 
 ## Components
