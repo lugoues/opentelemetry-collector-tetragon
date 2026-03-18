@@ -225,13 +225,25 @@ func TestReceiverReconnectsOnStreamError(t *testing.T) {
 // a receiver waiting in exponential backoff.
 func TestReceiverCleanShutdownDuringBackoff(t *testing.T) {
 	// Client always errors — receiver will enter backoff loop.
-	client := &mockTetragonClient{getEventsErr: io.ErrUnexpectedEOF}
+	// Use callCount to detect when the receiver has attempted at least one
+	// connection, which means it has entered the backoff loop.
+	var callCount atomic.Int32
+	client := &mockTetragonClientFn{
+		fn: func(_ context.Context, _ *tetragonv1.GetEventsRequest, _ ...grpc.CallOption) (
+			tetragonv1.FineGuidanceSensors_GetEventsClient, error,
+		) {
+			callCount.Add(1)
+			return nil, io.ErrUnexpectedEOF
+		},
+	}
 
 	r, _ := newTestReceiver(t, client)
 	require.NoError(t, r.Start(context.Background(), componenttest.NewNopHost()))
 
-	// Give the receiver time to enter backoff.
-	time.Sleep(100 * time.Millisecond)
+	// Wait until the receiver has attempted at least one connection (entered backoff).
+	require.Eventually(t, func() bool {
+		return callCount.Load() >= 1
+	}, 5*time.Second, 5*time.Millisecond, "receiver should attempt at least one connection")
 
 	done := make(chan error, 1)
 	go func() {
@@ -244,6 +256,51 @@ func TestReceiverCleanShutdownDuringBackoff(t *testing.T) {
 	case <-time.After(2 * time.Second):
 		t.Fatal("Shutdown timed out — receiver is stuck in backoff sleep")
 	}
+}
+
+// TestReceiverRetryDisabled verifies that when retry is disabled, the receiver
+// stops permanently after the first stream error instead of reconnecting.
+func TestReceiverRetryDisabled(t *testing.T) {
+	var callCount atomic.Int32
+	called := make(chan struct{}, 1)
+	client := &mockTetragonClientFn{
+		fn: func(_ context.Context, _ *tetragonv1.GetEventsRequest, _ ...grpc.CallOption) (
+			tetragonv1.FineGuidanceSensors_GetEventsClient, error,
+		) {
+			callCount.Add(1)
+			select {
+			case called <- struct{}{}:
+			default:
+			}
+			return nil, io.ErrUnexpectedEOF
+		},
+	}
+
+	r, _ := newTestReceiver(t, client)
+	r.cfg.Retry.Enabled = false
+	require.NoError(t, r.Start(context.Background(), componenttest.NewNopHost()))
+
+	// Wait until at least one GetEvents call has been made.
+	select {
+	case <-called:
+	case <-time.After(5 * time.Second):
+		t.Fatal("receiver never called GetEvents")
+	}
+
+	// The goroutine should exit on its own after the first error.
+	done := make(chan error, 1)
+	go func() {
+		done <- r.Shutdown(context.Background())
+	}()
+
+	select {
+	case err := <-done:
+		assert.NoError(t, err)
+	case <-time.After(5 * time.Second):
+		t.Fatal("Shutdown timed out — receiver should have exited after first error")
+	}
+
+	assert.Equal(t, int32(1), callCount.Load(), "should only attempt one connection when retry is disabled")
 }
 
 // TestReceiverConsumesLogs verifies event attributes flow through the pipeline correctly.
