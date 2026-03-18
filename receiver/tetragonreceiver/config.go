@@ -23,7 +23,10 @@ func (c *Config) Validate() error {
 	if c.Endpoint == "" {
 		return errors.New("endpoint is required")
 	}
-	return c.ClientConfig.Validate()
+	if err := c.ClientConfig.Validate(); err != nil {
+		return err
+	}
+	return c.Retry.Validate()
 }
 
 // createDefaultConfig creates the default configuration for the tetragon receiver.
