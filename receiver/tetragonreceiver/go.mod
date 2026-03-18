@@ -49,6 +49,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/collector/client v1.54.0 // indirect
+	go.opentelemetry.io/collector/component/componentstatus v0.148.0 // indirect
 	go.opentelemetry.io/collector/component/componenttest v0.148.0 // indirect
 	go.opentelemetry.io/collector/config/configauth v1.54.0 // indirect
 	go.opentelemetry.io/collector/config/configcompression v1.54.0 // indirect
@@ -66,6 +67,8 @@ require (
 	go.opentelemetry.io/collector/pdata/pprofile v0.148.0 // indirect
 	go.opentelemetry.io/collector/pdata/xpdata v0.148.0 // indirect
 	go.opentelemetry.io/collector/pipeline v1.54.0 // indirect
+	go.opentelemetry.io/collector/pipeline/xpipeline v0.148.0 // indirect
+	go.opentelemetry.io/collector/receiver/receiverhelper v0.148.0 // indirect
 	go.opentelemetry.io/collector/receiver/xreceiver v0.148.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.67.0 // indirect
 	go.opentelemetry.io/otel v1.42.0 // indirect
