@@ -29,9 +29,11 @@ type mockGetEventsClient struct {
 	idx       int
 	err       error
 	blockCtx  context.Context // non-nil: block until Done instead of returning EOF
+	streamCtx context.Context // set by mockTetragonClient.GetEvents; mirrors real gRPC ctx
 }
 
 // Recv returns the next response or blocks/errors per configuration.
+// When blockCtx is set, Recv blocks until either blockCtx or streamCtx is Done.
 func (m *mockGetEventsClient) Recv() (*tetragonv1.GetEventsResponse, error) {
 	m.mu.Lock()
 	if m.err != nil {
@@ -48,8 +50,18 @@ func (m *mockGetEventsClient) Recv() (*tetragonv1.GetEventsResponse, error) {
 	m.mu.Unlock()
 
 	if m.blockCtx != nil {
-		<-m.blockCtx.Done()
-		return nil, m.blockCtx.Err()
+		// Block until either the explicit block context or the stream context is done.
+		// This mirrors real gRPC behaviour: cancelling the call context unblocks Recv.
+		streamCtx := m.streamCtx
+		if streamCtx == nil {
+			streamCtx = context.Background()
+		}
+		select {
+		case <-m.blockCtx.Done():
+			return nil, m.blockCtx.Err()
+		case <-streamCtx.Done():
+			return nil, streamCtx.Err()
+		}
 	}
 	return nil, io.EOF
 }
@@ -58,9 +70,14 @@ func (m *mockGetEventsClient) Recv() (*tetragonv1.GetEventsResponse, error) {
 func (m *mockGetEventsClient) Header() (metadata.MD, error) { return nil, nil }
 func (m *mockGetEventsClient) Trailer() metadata.MD         { return nil }
 func (m *mockGetEventsClient) CloseSend() error             { return nil }
-func (m *mockGetEventsClient) Context() context.Context     { return context.Background() }
-func (m *mockGetEventsClient) SendMsg(_ any) error          { return nil }
-func (m *mockGetEventsClient) RecvMsg(_ any) error          { return nil }
+func (m *mockGetEventsClient) Context() context.Context {
+	if m.streamCtx != nil {
+		return m.streamCtx
+	}
+	return context.Background()
+}
+func (m *mockGetEventsClient) SendMsg(_ any) error { return nil }
+func (m *mockGetEventsClient) RecvMsg(_ any) error { return nil }
 
 // mockTetragonClient implements tetragonClient.
 type mockTetragonClient struct {
@@ -70,7 +87,7 @@ type mockTetragonClient struct {
 	callCount    int
 }
 
-func (m *mockTetragonClient) GetEvents(_ context.Context, _ *tetragonv1.GetEventsRequest, _ ...grpc.CallOption) (
+func (m *mockTetragonClient) GetEvents(ctx context.Context, _ *tetragonv1.GetEventsRequest, _ ...grpc.CallOption) (
 	tetragonv1.FineGuidanceSensors_GetEventsClient, error,
 ) {
 	m.mu.Lock()
@@ -78,6 +95,10 @@ func (m *mockTetragonClient) GetEvents(_ context.Context, _ *tetragonv1.GetEvent
 	m.callCount++
 	if m.getEventsErr != nil {
 		return nil, m.getEventsErr
+	}
+	// Thread the call context into the stream so Recv() can unblock on cancellation.
+	if mc, ok := m.stream.(*mockGetEventsClient); ok {
+		mc.streamCtx = ctx
 	}
 	return m.stream, nil
 }
