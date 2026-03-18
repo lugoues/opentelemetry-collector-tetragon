@@ -1,0 +1,46 @@
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+  file_storage/checkpoint:
+    directory: /var/lib/otelcol/checkpoint
+
+receivers:
+  tetragon:
+    endpoint: "tetragon:54321"
+    tls:
+      insecure: true
+
+  journald:
+    directory: /var/log/journal
+    priority: info
+    storage: file_storage/checkpoint
+
+processors:
+  batch:
+    timeout: 5s
+    send_batch_size: 1024
+
+  resourcedetection:
+    detectors: [system]
+    system:
+      hostname_sources: [os]
+
+exporters:
+  otlphttp/openobserve:
+    endpoint: http://openobserve:5080/api/default
+    headers:
+      Authorization: Basic ${env:OTEL_AUTH}
+      stream-name: default
+
+service:
+  extensions: [health_check, file_storage/checkpoint]
+  pipelines:
+    logs/tetragon:
+      receivers: [tetragon]
+      processors: [resourcedetection, batch]
+      exporters: [otlphttp/openobserve]
+    logs/journal:
+      receivers: [journald]
+      processors: [resourcedetection, batch]
+      exporters: [otlphttp/openobserve]
