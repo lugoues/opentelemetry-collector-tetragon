@@ -7,7 +7,7 @@
 
 ### Receiver Core
 
-- [ ] **RECV-01**: Receiver registers as a logs receiver via `receiver.NewFactory` with `receiver.WithLogs`
+- [x] **RECV-01**: Receiver registers as a logs receiver via `receiver.NewFactory` with `receiver.WithLogs`
 - [ ] **RECV-02**: Receiver implements `Start()` that connects to Tetragon gRPC endpoint and spawns stream goroutine without blocking
 - [ ] **RECV-03**: Receiver implements `Shutdown()` that cancels stream context, waits for goroutine exit, and closes gRPC connection
 - [ ] **RECV-04**: Receiver streams events via `FineGuidanceSensors.GetEvents` server-streaming RPC
@@ -18,10 +18,10 @@
 
 ### Configuration
 
-- [ ] **CONF-01**: Config struct with endpoint, TLS, and retry settings using `configgrpc.ClientConfig`
-- [ ] **CONF-02**: Config validates at startup (empty endpoint, invalid TLS paths fail fast)
-- [ ] **CONF-03**: Default config: endpoint `localhost:54321`, insecure true, reasonable backoff defaults
-- [ ] **CONF-04**: Config is YAML-configurable via standard OTel Collector config file
+- [x] **CONF-01**: Config struct with endpoint, TLS, and retry settings using `configgrpc.ClientConfig`
+- [x] **CONF-02**: Config validates at startup (empty endpoint, invalid TLS paths fail fast)
+- [x] **CONF-03**: Default config: endpoint `localhost:54321`, insecure true, reasonable backoff defaults
+- [x] **CONF-04**: Config is YAML-configurable via standard OTel Collector config file
 
 ### Event Conversion
 
@@ -54,9 +54,9 @@
 
 ### Project Setup
 
-- [ ] **PROJ-01**: mise.toml with Go, OCB, and project tasks (build, test, lint)
+- [x] **PROJ-01**: mise.toml with Go, OCB, and project tasks (build, test, lint)
 - [ ] **PROJ-02**: Example collector config in rootfs/etc/otelcol/config.yaml
-- [ ] **PROJ-03**: metadata.yaml declaring receiver type and alpha stability for logs signal
+- [x] **PROJ-03**: metadata.yaml declaring receiver type and alpha stability for logs signal
 - [ ] **PROJ-04**: README with usage, configuration reference, and build instructions
 
 ## v2 Requirements
@@ -86,7 +86,7 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| RECV-01 | Phase 1 | Pending |
+| RECV-01 | Phase 1 | Complete |
 | RECV-02 | Phase 1 | Pending |
 | RECV-03 | Phase 1 | Pending |
 | RECV-04 | Phase 1 | Pending |
@@ -94,10 +94,10 @@
 | RECV-06 | Phase 1 | Pending |
 | RECV-07 | Phase 1 | Pending |
 | RECV-08 | Phase 1 | Pending |
-| CONF-01 | Phase 1 | Pending |
-| CONF-02 | Phase 1 | Pending |
-| CONF-03 | Phase 1 | Pending |
-| CONF-04 | Phase 1 | Pending |
+| CONF-01 | Phase 1 | Complete |
+| CONF-02 | Phase 1 | Complete |
+| CONF-03 | Phase 1 | Complete |
+| CONF-04 | Phase 1 | Complete |
 | CONV-01 | Phase 1 | Pending |
 | CONV-02 | Phase 1 | Pending |
 | CONV-03 | Phase 1 | Pending |
@@ -113,9 +113,9 @@
 | DIST-03 | Phase 2 | Pending |
 | DIST-04 | Phase 2 | Pending |
 | DIST-05 | Phase 2 | Pending |
-| PROJ-01 | Phase 1 | Pending |
+| PROJ-01 | Phase 1 | Complete |
 | PROJ-02 | Phase 2 | Pending |
-| PROJ-03 | Phase 1 | Pending |
+| PROJ-03 | Phase 1 | Complete |
 | PROJ-04 | Phase 3 | Pending |
 | CICD-01 | Phase 3 | Pending |
 | CICD-02 | Phase 3 | Pending |
