@@ -34,8 +34,8 @@ resourceLogs:
                 value:
                   stringValue: KPROBE_ACTION_POST
             body:
-              stringValue: '{"process_usdt":{"process":{"exec_id":"usdt-test-id-77777","pid":7777,"cwd":"/var/lib/mysql","binary":"/usr/sbin/mysqld"},"policy_name":"mysql-query-trace","action":"KPROBE_ACTION_POST"},"node_name":"worker-1","time":"2026-03-18T10:07:00Z"}'
-            observedTimeUnixNano: "1773808981902517225"
+              stringValue: '{"process_usdt":{"process":{"exec_id":"usdt-test-id-77777", "pid":7777, "cwd":"/var/lib/mysql", "binary":"/usr/sbin/mysqld"}, "policy_name":"mysql-query-trace", "action":"KPROBE_ACTION_POST"}, "node_name":"worker-1", "time":"2026-03-18T10:07:00Z"}'
+            observedTimeUnixNano: "1773809446658625670"
             severityNumber: 13
             severityText: WARN
             timeUnixNano: "1773828420000000000"
