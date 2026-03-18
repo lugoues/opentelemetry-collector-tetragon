@@ -40,8 +40,8 @@ resourceLogs:
                 value:
                   stringValue: sys_enter
             body:
-              stringValue: '{"process_tracepoint":{"process":{"exec_id":"tp-test-id-33333","pid":3333,"cwd":"/","binary":"/usr/bin/mount"},"subsys":"raw_syscalls","event":"sys_enter","policy_name":"syscall-monitor","action":"KPROBE_ACTION_POST"},"node_name":"worker-1","time":"2026-03-18T10:03:00Z"}'
-            observedTimeUnixNano: "1773808981900376605"
+              stringValue: '{"process_tracepoint":{"process":{"exec_id":"tp-test-id-33333", "pid":3333, "cwd":"/", "binary":"/usr/bin/mount"}, "subsys":"raw_syscalls", "event":"sys_enter", "policy_name":"syscall-monitor", "action":"KPROBE_ACTION_POST"}, "node_name":"worker-1", "time":"2026-03-18T10:03:00Z"}'
+            observedTimeUnixNano: "1773809446656399317"
             severityNumber: 13
             severityText: WARN
             timeUnixNano: "1773828180000000000"
