@@ -25,9 +25,80 @@ To build with a custom UID/GID:
 docker build --build-arg UID=1000 --build-arg GID=1000 -f container/Containerfile .
 ```
 
-## Configuration Reference
+## Configuration
 
-The `tetragon` receiver accepts the following configuration fields:
+The collector is configured through three mechanisms:
+
+### Config File
+
+Mount a YAML config file into the container at `/etc/otelcol/config.yaml` (the default path), or pass a custom path:
+
+```bash
+docker run --rm \
+  -v ./my-config.yaml:/etc/otelcol/config.yaml \
+  ghcr.io/cilium/otelcol-tetragon:latest
+
+# Or with a custom path
+docker run --rm \
+  -v ./my-config.yaml:/config.yaml \
+  ghcr.io/cilium/otelcol-tetragon:latest --config /config.yaml
+```
+
+An example two-pipeline config (Tetragon + journald) is included at [`container/rootfs/etc/otelcol/config.yaml`](container/rootfs/etc/otelcol/config.yaml).
+
+### Environment Variables
+
+The OTel Collector supports `${env:VAR_NAME}` substitution in config files. Use this for secrets and deployment-specific values:
+
+```yaml
+exporters:
+  otlphttp/openobserve:
+    endpoint: ${env:OTEL_EXPORTER_ENDPOINT}
+    headers:
+      Authorization: Basic ${env:OTEL_AUTH}
+```
+
+```bash
+docker run --rm \
+  -e OTEL_EXPORTER_ENDPOINT=http://openobserve:5080/api/default \
+  -e OTEL_AUTH=dXNlcjpwYXNz \
+  -v ./config.yaml:/etc/otelcol/config.yaml \
+  ghcr.io/cilium/otelcol-tetragon:latest
+```
+
+### CLI Flags
+
+The collector binary accepts these flags after the entrypoint:
+
+| Flag | Description |
+|------|-------------|
+| `--config <path>` | Config file path (default: `/etc/otelcol/config.yaml`) |
+| `--config <uri>` | Multiple configs merged in order (e.g., `--config base.yaml --config overrides.yaml`) |
+| `--set <key>=<value>` | Override a single config value (e.g., `--set receivers.tetragon.endpoint=10.0.0.1:54321`) |
+| `--feature-gates <gate>` | Enable/disable feature gates (e.g., `--feature-gates -component.UseLocalHostAsDefaultHost`) |
+
+```bash
+docker run --rm \
+  -v ./config.yaml:/etc/otelcol/config.yaml \
+  ghcr.io/cilium/otelcol-tetragon:latest \
+  --config /etc/otelcol/config.yaml \
+  --set receivers.tetragon.endpoint=tetragon.kube-system.svc:54321
+```
+
+### Container Build Args
+
+| Arg | Default | Description |
+|-----|---------|-------------|
+| `UID` | `10001` | UID for the `otel` runtime user |
+| `GID` | `10001` | GID for the `otel` runtime group |
+
+```bash
+docker build --build-arg UID=1000 --build-arg GID=1000 -f container/Containerfile .
+```
+
+## Receiver Reference
+
+The `tetragon` receiver accepts the following fields in the config file:
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -41,7 +112,7 @@ The `tetragon` receiver accepts the following configuration fields:
 | `retry.max_interval` | duration | `30s` | Maximum retry backoff interval |
 | `retry.max_elapsed_time` | duration | `0` (unlimited) | Maximum total retry time (0 = retry forever) |
 
-Minimal configuration example:
+Minimal config example:
 
 ```yaml
 receivers:
@@ -60,8 +131,6 @@ service:
       receivers: [tetragon]
       exporters: [otlphttp]
 ```
-
-An example two-pipeline config (Tetragon + journald) is included at `container/rootfs/etc/otelcol/config.yaml`.
 
 ## Development Setup
 
