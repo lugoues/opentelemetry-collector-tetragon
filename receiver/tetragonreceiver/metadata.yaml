@@ -1,0 +1,6 @@
+type: tetragon
+
+status:
+  class: receiver
+  stability:
+    alpha: [logs]
