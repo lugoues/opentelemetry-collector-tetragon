@@ -1,0 +1,9 @@
+endpoint: "tetragon.monitoring:54321"
+tls:
+  insecure: false
+  ca_file: /etc/ssl/ca.pem
+retry:
+  enabled: true
+  initial_interval: 2s
+  max_interval: 60s
+  max_elapsed_time: 0
