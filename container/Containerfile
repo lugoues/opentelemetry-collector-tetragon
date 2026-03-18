@@ -13,25 +13,9 @@ RUN builder \
     --skip-strict-versioning
 
 # --- Runtime stage ---
-FROM docker.io/library/debian:bookworm-slim
-
-ARG UID=10001
-ARG GID=10001
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-      systemd \
-      ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
-
-# Create otel user AFTER systemd install so systemd-journal group exists
-RUN groupadd --system --gid "${GID}" otel && \
-    useradd --system --uid "${UID}" --gid otel --no-create-home otel && \
-    usermod -aG systemd-journal otel
+FROM gcr.io/distroless/static-debian12:nonroot
 
 COPY --from=builder /tmp/dist/otelcol-tetragon /usr/local/bin/otelcol-tetragon
-
-USER otel
 
 EXPOSE 13133
 

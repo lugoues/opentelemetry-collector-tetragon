@@ -17,13 +17,7 @@ docker pull ghcr.io/cilium/otelcol-tetragon:latest
 docker run --rm -v ./config.yaml:/etc/otelcol/config.yaml ghcr.io/cilium/otelcol-tetragon:latest
 ```
 
-The container runs as non-root user `otel` (UID/GID 10001 by default). The health check extension listens on port 13133.
-
-To build with a custom UID/GID:
-
-```bash
-docker build --build-arg UID=1000 --build-arg GID=1000 -f container/Containerfile .
-```
+The container uses a [distroless](https://github.com/GoogleContainerTools/distroless) base image and runs as non-root user `nonroot` (UID 65534). The health check extension listens on port 13133.
 
 ## Configuration
 
@@ -44,7 +38,7 @@ docker run --rm \
   ghcr.io/cilium/otelcol-tetragon:latest --config /config.yaml
 ```
 
-An example two-pipeline config (Tetragon + journald) is included at [`container/rootfs/etc/otelcol/config.yaml`](container/rootfs/etc/otelcol/config.yaml).
+An example config is included at [`container/rootfs/etc/otelcol/config.yaml`](container/rootfs/etc/otelcol/config.yaml).
 
 ### Environment Variables
 
@@ -83,17 +77,6 @@ docker run --rm \
   ghcr.io/cilium/otelcol-tetragon:latest \
   --config /etc/otelcol/config.yaml \
   --set receivers.tetragon.endpoint=tetragon.kube-system.svc:54321
-```
-
-### Container Build Args
-
-| Arg | Default | Description |
-|-----|---------|-------------|
-| `UID` | `10001` | UID for the `otel` runtime user |
-| `GID` | `10001` | GID for the `otel` runtime group |
-
-```bash
-docker build --build-arg UID=1000 --build-arg GID=1000 -f container/Containerfile .
 ```
 
 ## Receiver Reference
@@ -182,7 +165,6 @@ This distribution includes the following OpenTelemetry Collector components:
 | Component | Type | Source |
 |-----------|------|--------|
 | tetragonreceiver | receiver | this repo |
-| journaldreceiver | receiver | opentelemetry-collector-contrib |
 | batchprocessor | processor | opentelemetry-collector core |
 | resourcedetectionprocessor | processor | opentelemetry-collector-contrib |
 | otlphttpexporter | exporter | opentelemetry-collector core |
