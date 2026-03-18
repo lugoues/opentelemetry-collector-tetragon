@@ -151,6 +151,9 @@ func (r *tetragonReceiver) runStream(ctx context.Context, eventCh chan<- *tetrag
 	componentstatus.ReportStatus(r.host,
 		componentstatus.NewEvent(componentstatus.StatusOK))
 
+	var lastBufferWarn time.Time
+	const bufferWarnInterval = 10 * time.Second
+
 	for {
 		resp, err := stream.Recv()
 		if err != nil {
@@ -160,13 +163,17 @@ func (r *tetragonReceiver) runStream(ctx context.Context, eventCh chan<- *tetrag
 			return fmt.Errorf("stream recv error: %w", err)
 		}
 
-		// Log a warning when the buffer nears capacity (80% threshold).
+		// Log a warning when the buffer nears capacity (80% threshold),
+		// rate-limited to avoid flooding under sustained backpressure.
 		bufLen := len(eventCh)
 		if bufLen >= int(float64(bufferSize)*bufferWarnPct) {
-			r.logger.Warn("event buffer nearing capacity",
-				zap.Int("buffer_len", bufLen),
-				zap.Int("buffer_cap", bufferSize),
-				zap.Float64("utilization_pct", float64(bufLen)/float64(bufferSize)*100))
+			if time.Since(lastBufferWarn) >= bufferWarnInterval {
+				r.logger.Warn("event buffer nearing capacity",
+					zap.Int("buffer_len", bufLen),
+					zap.Int("buffer_cap", bufferSize),
+					zap.Float64("utilization_pct", float64(bufLen)/float64(bufferSize)*100))
+				lastBufferWarn = time.Now()
+			}
 		}
 
 		select {
