@@ -17,7 +17,7 @@ docker pull ghcr.io/cilium/otelcol-tetragon:latest
 docker run --rm -v ./config.yaml:/etc/otelcol/config.yaml ghcr.io/cilium/otelcol-tetragon:latest
 ```
 
-The container uses a [distroless](https://github.com/GoogleContainerTools/distroless) base image and runs as non-root user `nonroot` (UID 65534). The health check extension listens on port 13133.
+The container uses a [distroless](https://github.com/GoogleContainerTools/distroless) base image and runs as non-root (UID 1000). The health check extension listens on port 13133.
 
 ## Configuration
 
