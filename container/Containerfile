@@ -11,27 +11,34 @@ RUN builder \
     --config distribution/builder-config.yaml \
     --skip-strict-versioning
 
-# Create the checkpoint directory in the builder stage so we can COPY it
-# into distroless (which has no shell or mkdir).
-RUN mkdir -p /tmp/otelcol-state/checkpoint && chown -R 1000:1000 /tmp/otelcol-state
-
 # --- Runtime stage ---
-# Use :latest (root) base, then set USER to a low UID.
-# :nonroot uses UID 65534, which forces podman UserNS=auto to map 65535+ UIDs.
-# UID 1000 keeps the mapping small (1001 UIDs).
-FROM gcr.io/distroless/static-debian12:latest
+# Debian-slim is required because journaldreceiver shells out to journalctl,
+# which needs systemd installed. Distroless/scratch cannot provide this.
+FROM docker.io/library/debian:bookworm-slim
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      systemd \
+      ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create otel user AFTER systemd install so systemd-journal group exists.
+RUN groupadd --system --gid 10001 otel && \
+    useradd --system --uid 10001 --gid otel --no-create-home otel && \
+    usermod -aG systemd-journal otel
+
+# Create checkpoint directory with correct ownership.
+RUN mkdir -p /var/lib/otelcol/checkpoint && \
+    chown -R otel:otel /var/lib/otelcol
 
 COPY --from=builder /tmp/dist/otelcol-tetragon /usr/local/bin/otelcol-tetragon
-COPY --from=builder --chown=1000:1000 /tmp/otelcol-state /var/lib/otelcol
 
-USER 1000:1000
+USER otel
 
 # Declare a volume for persistent state (e.g., file_storage/checkpoint extension).
 VOLUME /var/lib/otelcol
 
 # Health check: The OTel Collector health_check extension listens on port 13133.
-# Distroless images have no shell, wget, or curl — Dockerfile HEALTHCHECK cannot
-# work. Use Kubernetes readiness/liveness probes targeting port 13133 instead.
 EXPOSE 13133
 
 ENTRYPOINT ["/usr/local/bin/otelcol-tetragon"]

@@ -11,6 +11,7 @@ extensions:
 receivers:
   - gomod: github.com/cilium/otelcol-tetragon/receiver/tetragonreceiver v0.1.0
     path: ./receiver/tetragonreceiver
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/journaldreceiver v0.148.0
 
 processors:
   - gomod: go.opentelemetry.io/collector/processor/batchprocessor v0.148.0
