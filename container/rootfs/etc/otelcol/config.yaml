@@ -11,8 +11,6 @@ receivers:
     tls:
       insecure: true
 
-  journald:
-    directory: /var/log/journal
 
 processors:
   batch:
@@ -36,9 +34,5 @@ service:
   pipelines:
     logs/tetragon:
       receivers: [tetragon]
-      processors: [resourcedetection, batch]
-      exporters: [otlphttp/openobserve]
-    logs/journald:
-      receivers: [journald]
       processors: [resourcedetection, batch]
       exporters: [otlphttp/openobserve]
