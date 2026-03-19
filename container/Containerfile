@@ -9,7 +9,6 @@ COPY . .
 # Run from repo root so path: ./receiver/tetragonreceiver resolves correctly
 RUN builder \
     --config distribution/builder-config.yaml \
-    --output-path /tmp/dist \
     --skip-strict-versioning
 
 # Create the checkpoint directory in the builder stage so we can COPY it
