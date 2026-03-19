@@ -56,7 +56,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/cilium/otelcol-tetragon
+          images: ghcr.io/lugoues/opentelemetry-collector-tetragon
           tags: |
             type=ref,event=branch
             type=ref,event=pr
