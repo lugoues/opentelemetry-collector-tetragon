@@ -51,7 +51,7 @@ func (r *tetragonReceiver) Start(ctx context.Context, host component.Host) error
 
 	// Skip dial if client was pre-set (test-only path).
 	if r.client == nil {
-		conn, err := r.cfg.ClientConfig.ToClientConn(ctx, host.GetExtensions(), r.settings.TelemetrySettings)
+		conn, err := r.cfg.ToClientConn(ctx, host.GetExtensions(), r.settings.TelemetrySettings)
 		if err != nil {
 			return fmt.Errorf("failed to create gRPC client connection: %w", err)
 		}
