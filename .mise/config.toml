@@ -1,5 +1,6 @@
 [tools]
 go = "1.25"
+"go:github.com/golangci/golangci-lint/v2/cmd/golangci-lint" = "latest"
 
 [tasks.test]
 description = "Run receiver unit tests with race detector"
@@ -7,8 +8,8 @@ run = "go test -race ./..."
 dir = "receiver/tetragonreceiver"
 
 [tasks.lint]
-description = "Run go vet on receiver module"
-run = "go vet ./..."
+description = "Run golangci-lint on receiver module"
+run = "golangci-lint run ./..."
 dir = "receiver/tetragonreceiver"
 
 [tasks.build]
