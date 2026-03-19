@@ -12,6 +12,10 @@ RUN builder \
     --output-path /tmp/dist \
     --skip-strict-versioning
 
+# Create the checkpoint directory in the builder stage so we can COPY it
+# into distroless (which has no shell or mkdir).
+RUN mkdir -p /tmp/otelcol-state/checkpoint && chown -R 1000:1000 /tmp/otelcol-state
+
 # --- Runtime stage ---
 # Use :latest (root) base, then set USER to a low UID.
 # :nonroot uses UID 65534, which forces podman UserNS=auto to map 65535+ UIDs.
@@ -19,6 +23,7 @@ RUN builder \
 FROM gcr.io/distroless/static-debian12:latest
 
 COPY --from=builder /tmp/dist/otelcol-tetragon /usr/local/bin/otelcol-tetragon
+COPY --from=builder --chown=1000:1000 /tmp/otelcol-state /var/lib/otelcol
 
 USER 1000:1000
 
