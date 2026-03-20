@@ -4,16 +4,16 @@ import (
 	"context"
 	"testing"
 
+	"github.com/cilium/otelcol-tetragon/receiver/tetragonreceiver/internal/metadata"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer/consumertest"
 	"go.opentelemetry.io/collector/receiver/receivertest"
 )
 
 func TestNewFactory(t *testing.T) {
 	factory := NewFactory()
-	assert.Equal(t, component.MustNewType(componentType), factory.Type())
+	assert.Equal(t, metadata.Type, factory.Type())
 }
 
 func TestCreateDefaultConfig(t *testing.T) {
@@ -29,7 +29,7 @@ func TestCreateLogsReceiver(t *testing.T) {
 	cfg := factory.CreateDefaultConfig()
 	recv, err := factory.CreateLogs(
 		context.Background(),
-		receivertest.NewNopSettings(component.MustNewType(componentType)),
+		receivertest.NewNopSettings(metadata.Type),
 		cfg,
 		consumertest.NewNop(),
 	)
@@ -42,7 +42,7 @@ func TestShutdownBeforeStart(t *testing.T) {
 	cfg := factory.CreateDefaultConfig()
 	recv, err := factory.CreateLogs(
 		context.Background(),
-		receivertest.NewNopSettings(component.MustNewType(componentType)),
+		receivertest.NewNopSettings(metadata.Type),
 		cfg,
 		consumertest.NewNop(),
 	)
