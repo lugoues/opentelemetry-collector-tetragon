@@ -10,6 +10,9 @@ receivers:
     endpoint: ${env:TETRAGON_ENDPOINT}
     tls:
       insecure: true
+    keepalive:
+      ping_wait: 30s
+      permit_without_stream: true
 
 
 processors:
