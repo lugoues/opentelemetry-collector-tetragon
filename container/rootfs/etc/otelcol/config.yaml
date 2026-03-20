@@ -27,7 +27,7 @@ exporters:
     endpoint: ${env:OTEL_EXPORTER_ENDPOINT}
     headers:
       Authorization: Basic ${env:OTEL_AUTH}
-      stream-name: default
+      stream-name: ${env:OTEL_STREAM_NAME}
 
 service:
   extensions: [health_check, file_storage/checkpoint]
