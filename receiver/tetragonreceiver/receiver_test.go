@@ -8,15 +8,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cilium/otelcol-tetragon/receiver/tetragonreceiver/internal/metadata"
 	tetragonv1 "github.com/cilium/tetragon/api/v1/tetragon"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/component/componenttest"
 	"go.opentelemetry.io/collector/consumer/consumertest"
 	"go.opentelemetry.io/collector/receiver/receivertest"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
+	grpcmetadata "google.golang.org/grpc/metadata"
 )
 
 // ---- Mock implementations ----
@@ -67,8 +67,8 @@ func (m *mockGetEventsClient) Recv() (*tetragonv1.GetEventsResponse, error) {
 }
 
 // grpc.ClientStream implementation (required by grpc.ServerStreamingClient).
-func (m *mockGetEventsClient) Header() (metadata.MD, error) { return nil, nil }
-func (m *mockGetEventsClient) Trailer() metadata.MD         { return nil }
+func (m *mockGetEventsClient) Header() (grpcmetadata.MD, error) { return nil, nil }
+func (m *mockGetEventsClient) Trailer() grpcmetadata.MD         { return nil }
 func (m *mockGetEventsClient) CloseSend() error             { return nil }
 func (m *mockGetEventsClient) Context() context.Context {
 	if m.streamCtx != nil {
@@ -111,7 +111,7 @@ func newTestReceiver(t *testing.T, client tetragonClient) (*tetragonReceiver, *c
 	t.Helper()
 	sink := &consumertest.LogsSink{}
 	factory := NewFactory()
-	settings := receivertest.NewNopSettings(component.MustNewType(componentType))
+	settings := receivertest.NewNopSettings(metadata.Type)
 	cfg := factory.CreateDefaultConfig().(*Config)
 
 	recv, err := createLogsReceiver(context.Background(), settings, cfg, sink)

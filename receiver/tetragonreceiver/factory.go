@@ -3,20 +3,19 @@ package tetragonreceiver
 import (
 	"context"
 
+	"github.com/cilium/otelcol-tetragon/receiver/tetragonreceiver/internal/metadata"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/receiver"
 	"go.opentelemetry.io/collector/receiver/receiverhelper"
 )
 
-const componentType = "tetragon"
-
 // NewFactory creates a new receiver factory for the Tetragon receiver.
 func NewFactory() receiver.Factory {
 	return receiver.NewFactory(
-		component.MustNewType(componentType),
+		metadata.Type,
 		createDefaultConfig,
-		receiver.WithLogs(createLogsReceiver, component.StabilityLevelAlpha),
+		receiver.WithLogs(createLogsReceiver, metadata.LogsStability),
 	)
 }
 
