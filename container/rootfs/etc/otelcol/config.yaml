@@ -11,7 +11,7 @@ receivers:
     tls:
       insecure: true
     keepalive:
-      ping_wait: 30s
+      time: 30s
       permit_without_stream: true
 
 
@@ -20,22 +20,43 @@ processors:
     timeout: 5s
     send_batch_size: 1024
 
+  memory_limiter:
+    check_interval: 5s
+    limit_mib: 256
+    spike_limit_mib: 64
+
   resourcedetection:
     detectors: [system]
     system:
       hostname_sources: [os]
 
 exporters:
-  otlphttp/openobserve:
+  otlp_http/openobserve:
     endpoint: ${env:OTEL_EXPORTER_ENDPOINT}
     headers:
       Authorization: Basic ${env:OTEL_AUTH}
       stream-name: ${env:OTEL_STREAM_NAME}
+    sending_queue:
+      enabled: true
+      storage: file_storage/checkpoint
 
 service:
   extensions: [health_check, file_storage/checkpoint]
+  telemetry:
+    logs:
+      level: ${env:OTEL_LOG_LEVEL:-info}
+    metrics:
+      readers:
+        - periodic:
+            interval: 30000
+            exporter:
+              otlp:
+                protocol: http/protobuf
+                endpoint: ${env:OTEL_EXPORTER_ENDPOINT}/v1/metrics
+                headers:
+                  Authorization: Basic ${env:OTEL_AUTH}
   pipelines:
     logs/tetragon:
       receivers: [tetragon]
-      processors: [resourcedetection, batch]
-      exporters: [otlphttp/openobserve]
+      processors: [memory_limiter, resourcedetection, batch]
+      exporters: [otlp_http/openobserve]
