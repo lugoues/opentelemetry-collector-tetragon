@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/cenkalti/backoff/v5 v5.0.3
-	github.com/cilium/tetragon/api v1.6.0
+	github.com/cilium/tetragon/api v1.6.1
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/golden v0.148.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatatest v0.148.0
 	github.com/stretchr/testify v1.11.1
@@ -24,7 +24,7 @@ require (
 	go.opentelemetry.io/collector/receiver/receivertest v0.148.0
 	go.uber.org/goleak v1.3.0
 	go.uber.org/zap v1.27.1
-	google.golang.org/grpc v1.79.2
+	google.golang.org/grpc v1.79.3
 	google.golang.org/protobuf v1.36.11
 )
 
