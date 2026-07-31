@@ -84,6 +84,14 @@ func TestConfigValidate_UnknownEventType(t *testing.T) {
 	assert.Contains(t, err.Error(), "unknown event type")
 }
 
+func TestConfigValidate_InvalidBinaryRegex(t *testing.T) {
+	cfg := createDefaultConfig().(*Config)
+	cfg.Filters.DenyList = []EventFilter{{BinaryRegex: []string{"["}}}
+	err := cfg.Validate()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid binary_regex")
+}
+
 func TestBuildGetEventsRequest_Empty(t *testing.T) {
 	cfg := createDefaultConfig().(*Config)
 	req := cfg.buildGetEventsRequest()

@@ -3,6 +3,7 @@ package tetragonreceiver
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"time"
 
 	tetragonv1 "github.com/cilium/tetragon/api/v1/tetragon"
@@ -66,6 +67,14 @@ func (f FiltersConfig) validate() error {
 			for _, name := range ef.EventSet {
 				if _, ok := tetragonv1.EventType_value[name]; !ok {
 					return fmt.Errorf("unknown event type %q in filters", name)
+				}
+			}
+			// Compile with Go's regexp (RE2), the same engine Tetragon uses
+			// server-side, so a malformed pattern fails at startup instead of
+			// looping forever on stream reconnects (default retry is unlimited).
+			for _, expr := range ef.BinaryRegex {
+				if _, err := regexp.Compile(expr); err != nil {
+					return fmt.Errorf("invalid binary_regex %q in filters: %w", expr, err)
 				}
 			}
 		}
