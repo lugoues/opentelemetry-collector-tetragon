@@ -1,0 +1,10 @@
+endpoint: "tetragon.monitoring:54321"
+tls:
+  insecure: true
+filters:
+  deny_list:
+    - event_set: [PROCESS_EXEC, PROCESS_EXIT]
+  allow_list:
+    - event_set: [PROCESS_KPROBE]
+      binary_regex:
+        - "^/usr/bin/sudo$"

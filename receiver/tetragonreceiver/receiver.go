@@ -197,7 +197,7 @@ func (r *tetragonReceiver) streamEvents(ctx context.Context) {
 // runStream opens a single gRPC stream, reads events into eventCh, and returns
 // when the stream ends (either cleanly via ctx cancellation or on error).
 func (r *tetragonReceiver) runStream(ctx context.Context, eventCh chan<- *tetragonv1.GetEventsResponse) error {
-	stream, err := r.client.GetEvents(ctx, &tetragonv1.GetEventsRequest{})
+	stream, err := r.client.GetEvents(ctx, r.cfg.buildGetEventsRequest())
 	if err != nil {
 		return fmt.Errorf("failed to open event stream: %w", err)
 	}

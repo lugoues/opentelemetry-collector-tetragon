@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	tetragonv1 "github.com/cilium/tetragon/api/v1/tetragon"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component/componenttest"
@@ -57,6 +58,67 @@ func TestDefaultConfig(t *testing.T) {
 	assert.Equal(t, 1*time.Second, cfg.Retry.InitialInterval)
 	assert.Equal(t, 30*time.Second, cfg.Retry.MaxInterval)
 	assert.Equal(t, time.Duration(0), cfg.Retry.MaxElapsedTime)
+}
+
+func TestConfigFromYAML_Filters(t *testing.T) {
+	cm, err := confmaptest.LoadConf("testdata/config_filters.yaml")
+	require.NoError(t, err)
+
+	cfg := createDefaultConfig().(*Config)
+	err = cm.Unmarshal(cfg, confmap.WithIgnoreUnused())
+	require.NoError(t, err)
+	require.NoError(t, cfg.Validate())
+
+	require.Len(t, cfg.Filters.DenyList, 1)
+	assert.Equal(t, []string{"PROCESS_EXEC", "PROCESS_EXIT"}, cfg.Filters.DenyList[0].EventSet)
+	require.Len(t, cfg.Filters.AllowList, 1)
+	assert.Equal(t, []string{"PROCESS_KPROBE"}, cfg.Filters.AllowList[0].EventSet)
+	assert.Equal(t, []string{"^/usr/bin/sudo$"}, cfg.Filters.AllowList[0].BinaryRegex)
+}
+
+func TestConfigValidate_UnknownEventType(t *testing.T) {
+	cfg := createDefaultConfig().(*Config)
+	cfg.Filters.DenyList = []EventFilter{{EventSet: []string{"NOT_A_REAL_TYPE"}}}
+	err := cfg.Validate()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "unknown event type")
+}
+
+func TestConfigValidate_InvalidBinaryRegex(t *testing.T) {
+	cfg := createDefaultConfig().(*Config)
+	cfg.Filters.DenyList = []EventFilter{{BinaryRegex: []string{"["}}}
+	err := cfg.Validate()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid binary_regex")
+}
+
+func TestBuildGetEventsRequest_Empty(t *testing.T) {
+	cfg := createDefaultConfig().(*Config)
+	req := cfg.buildGetEventsRequest()
+	assert.Nil(t, req.AllowList)
+	assert.Nil(t, req.DenyList)
+}
+
+func TestBuildGetEventsRequest_Filters(t *testing.T) {
+	cfg := createDefaultConfig().(*Config)
+	cfg.Filters = FiltersConfig{
+		DenyList: []EventFilter{{EventSet: []string{"PROCESS_EXEC", "PROCESS_EXIT"}}},
+		AllowList: []EventFilter{{
+			EventSet:    []string{"PROCESS_KPROBE"},
+			BinaryRegex: []string{"^/usr/bin/sudo$"},
+		}},
+	}
+	require.NoError(t, cfg.Validate())
+
+	req := cfg.buildGetEventsRequest()
+	require.Len(t, req.DenyList, 1)
+	assert.Equal(t, []tetragonv1.EventType{
+		tetragonv1.EventType_PROCESS_EXEC,
+		tetragonv1.EventType_PROCESS_EXIT,
+	}, req.DenyList[0].EventSet)
+	require.Len(t, req.AllowList, 1)
+	assert.Equal(t, []tetragonv1.EventType{tetragonv1.EventType_PROCESS_KPROBE}, req.AllowList[0].EventSet)
+	assert.Equal(t, []string{"^/usr/bin/sudo$"}, req.AllowList[0].BinaryRegex)
 }
 
 func TestConfigFromYAML_Invalid(t *testing.T) {
