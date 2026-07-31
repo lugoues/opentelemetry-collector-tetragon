@@ -95,6 +95,8 @@ The `tetragon` receiver accepts the following fields in the config file:
 | `retry.initial_interval` | duration | `1s` | Initial retry backoff interval |
 | `retry.max_interval` | duration | `30s` | Maximum retry backoff interval |
 | `retry.max_elapsed_time` | duration | `0` (unlimited) | Maximum total retry time (0 = retry forever) |
+| `filters.allow_list` | list | - | Server-side allow filters (see below) |
+| `filters.deny_list` | list | - | Server-side deny filters (see below) |
 
 Minimal config example:
 
@@ -114,6 +116,35 @@ service:
     logs:
       receivers: [tetragon]
       exporters: [otlphttp]
+```
+
+### Filtering events
+
+`filters` is passed to Tetragon on the `GetEvents` request, so filtering happens
+**server-side in Tetragon before events cross the wire**, reducing CPU and network
+in addition to downstream storage. Tetragon applies `allow_list` first, then
+`deny_list`. Each filter entry supports:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `event_set` | list | Event types to match, e.g. `PROCESS_EXEC`, `PROCESS_EXIT`, `PROCESS_KPROBE`, `PROCESS_TRACEPOINT`, `PROCESS_UPROBE`. Unknown names fail validation. |
+| `binary_regex` | list | Regexes matched against the process binary path. |
+
+Fields within one filter are ANDed; multiple filters in a list are ORed. Prefer
+`deny_list` for noise reduction so event types added later keep flowing by default.
+
+Example — drop the high-volume process lifecycle stream, keep tracing-policy
+(kprobe) events:
+
+```yaml
+receivers:
+  tetragon:
+    endpoint: "tetragon.monitoring:54321"
+    tls:
+      insecure: true
+    filters:
+      deny_list:
+        - event_set: [PROCESS_EXEC, PROCESS_EXIT]
 ```
 
 ## Development Setup
