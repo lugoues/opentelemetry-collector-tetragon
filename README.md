@@ -1,4 +1,4 @@
-# otelcol-tetragon
+# opentelemetry-collector-tetragon
 
 A custom OpenTelemetry Collector distribution with a native Tetragon gRPC receiver for streaming security events into the OTel pipeline without filesystem coupling.
 
@@ -6,7 +6,7 @@ A custom OpenTelemetry Collector distribution with a native Tetragon gRPC receiv
 
 ## Overview
 
-`otelcol-tetragon` replaces the fragile filelog approach by connecting directly to Tetragon's gRPC `FineGuidanceSensors.GetEvents` streaming RPC. It streams all 11 event types (exec, exit, kprobe, tracepoint, loader, uprobe, lsm, usdt, throttle, rate_limit_info, test) as OTel LogRecords with full protojson body, extracted attributes, and proper severity mapping.
+`opentelemetry-collector-tetragon` replaces the fragile filelog approach by connecting directly to Tetragon's gRPC `FineGuidanceSensors.GetEvents` streaming RPC. It streams all 11 event types (exec, exit, kprobe, tracepoint, loader, uprobe, lsm, usdt, throttle, rate_limit_info, test) as OTel LogRecords with full protojson body, extracted attributes, and proper severity mapping.
 
 The collector is published as a multi-arch container image to the GitHub Container Registry and can be used as a drop-in replacement for any filelog-based Tetragon event pipeline.
 
