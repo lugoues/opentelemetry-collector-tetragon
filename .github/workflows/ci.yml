@@ -24,7 +24,7 @@ jobs:
           go-version-file: receiver/tetragonreceiver/go.mod
           cache-dependency-path: receiver/tetragonreceiver/go.sum
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v7
+        uses: golangci/golangci-lint-action@v9
         with:
           working-directory: receiver/tetragonreceiver
       - run: go test -race ./...
