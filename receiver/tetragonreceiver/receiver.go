@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	backoff "github.com/cenkalti/backoff/v5"
+	backoff "github.com/cenkalti/backoff/v7"
 	tetragonv1 "github.com/cilium/tetragon/api/v1/tetragon"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/component/componentstatus"
