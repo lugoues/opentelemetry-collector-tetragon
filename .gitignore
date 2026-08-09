@@ -1,3 +1,4 @@
 # Planning artifacts — not part of the distributed project
 SPEC.md
 milestone*.md
+.mise/config.local.toml
