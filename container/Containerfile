@@ -1,9 +1,8 @@
 # --- Build stage ---
 FROM docker.io/library/golang:1.25-bookworm AS builder
 
-# Keep the builder (OCB) version in lockstep with the collector component
-# versions in distribution/builder-config.yaml and the version installed in
-# .github/workflows/ci.yml — Dependabot cannot update these together.
+# The OCB version is kept in lockstep with distribution/builder-config.yaml
+# and .github/workflows/ci.yml by Renovate (see renovate.json customManagers).
 RUN go install go.opentelemetry.io/collector/cmd/builder@v0.148.0
 
 WORKDIR /build

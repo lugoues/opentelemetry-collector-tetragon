@@ -1,0 +1,47 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "schedule:weekly"
+  ],
+  "postUpdateOptions": ["gomodTidy"],
+  "packageRules": [
+    {
+      "description": "Group all OpenTelemetry collector components, the OCB pin, and contrib components into a single PR so distribution/builder-config.yaml, the Containerfile, CI, and go.mod move in lockstep",
+      "groupName": "opentelemetry collector",
+      "matchPackageNames": [
+        "go.opentelemetry.io/collector{/,}**",
+        "github.com/open-telemetry/opentelemetry-collector-contrib{/,}**"
+      ]
+    },
+    {
+      "description": "The tetragon receiver in builder-config.yaml is resolved from the local path, not a published module — never try to update it",
+      "matchPackageNames": ["github.com/cilium/otelcol-tetragon{/,}**"],
+      "enabled": false
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Collector component versions in the OCB builder config (gomod: <module> <version> lines)",
+      "managerFilePatterns": ["/^distribution/builder-config\\.yaml$/"],
+      "matchStrings": [
+        "gomod: (?<depName>\\S+) (?<currentValue>v\\d+\\.\\d+\\.\\d+(?:-[\\w.]+)?)"
+      ],
+      "datasourceTemplate": "go"
+    },
+    {
+      "customType": "regex",
+      "description": "OCB (builder) version pinned via go install in the Containerfile and CI workflow",
+      "managerFilePatterns": [
+        "/^container/Containerfile$/",
+        "/^\\.github/workflows/ci\\.yml$/"
+      ],
+      "matchStrings": [
+        "go install go\\.opentelemetry\\.io/collector/cmd/builder@(?<currentValue>v\\d+\\.\\d+\\.\\d+(?:-[\\w.]+)?)"
+      ],
+      "depNameTemplate": "go.opentelemetry.io/collector/cmd/builder",
+      "datasourceTemplate": "go"
+    }
+  ]
+}

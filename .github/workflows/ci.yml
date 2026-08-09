@@ -41,7 +41,8 @@ jobs:
           go-version-file: receiver/tetragonreceiver/go.mod
           cache-dependency-path: receiver/tetragonreceiver/go.sum
       - name: Install OCB
-        # Keep in lockstep with container/Containerfile and builder-config.yaml.
+        # Version kept in lockstep with container/Containerfile and
+        # builder-config.yaml by Renovate (see renovate.json customManagers).
         run: go install go.opentelemetry.io/collector/cmd/builder@v0.148.0
       - name: Build distribution
         run: builder --config distribution/builder-config.yaml --skip-strict-versioning
