@@ -29,9 +29,36 @@ jobs:
           working-directory: receiver/tetragonreceiver
       - run: go test -race ./...
 
+  # Build the full distribution and validate the bundled collector config on
+  # every PR/push, so builder-config or config.yaml breakage is caught before a
+  # release tag instead of during it.
+  build-distribution:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: receiver/tetragonreceiver/go.mod
+          cache-dependency-path: receiver/tetragonreceiver/go.sum
+      - name: Install OCB
+        # Keep in lockstep with container/Containerfile and builder-config.yaml.
+        run: go install go.opentelemetry.io/collector/cmd/builder@v0.148.0
+      - name: Build distribution
+        run: builder --config distribution/builder-config.yaml --skip-strict-versioning
+      - name: Validate bundled collector config
+        env:
+          TETRAGON_ENDPOINT: localhost:54321
+          OTEL_EXPORTER_ENDPOINT: http://localhost:5080/api/default
+          OTEL_AUTH: dummy
+          OTEL_STREAM_NAME: default
+        run: |
+          sudo mkdir -p /var/lib/otelcol/checkpoint
+          sudo chown -R "$(id -u)" /var/lib/otelcol
+          /tmp/dist/otelcol-tetragon validate --config container/rootfs/etc/otelcol/config.yaml
+
   build:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: test
+    needs: [test, build-distribution]
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
