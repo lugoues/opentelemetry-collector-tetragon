@@ -13,7 +13,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component/componenttest"
+	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/consumer/consumertest"
+	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/collector/receiver/receivertest"
 	"google.golang.org/grpc"
 	grpcmetadata "google.golang.org/grpc/metadata"
@@ -110,16 +112,22 @@ func (m *mockTetragonClient) GetEvents(ctx context.Context, _ *tetragonv1.GetEve
 func newTestReceiver(t *testing.T, client tetragonClient) (*tetragonReceiver, *consumertest.LogsSink) {
 	t.Helper()
 	sink := &consumertest.LogsSink{}
+	return newTestReceiverWithConsumer(t, client, sink), sink
+}
+
+// newTestReceiverWithConsumer is like newTestReceiver but with a caller-supplied consumer.
+func newTestReceiverWithConsumer(t *testing.T, client tetragonClient, next consumer.Logs) *tetragonReceiver {
+	t.Helper()
 	factory := NewFactory()
 	settings := receivertest.NewNopSettings(metadata.Type)
 	cfg := factory.CreateDefaultConfig().(*Config)
 
-	recv, err := createLogsReceiver(context.Background(), settings, cfg, sink)
+	recv, err := createLogsReceiver(context.Background(), settings, cfg, next)
 	require.NoError(t, err)
 
 	r := recv.(*tetragonReceiver)
 	r.client = client
-	return r, sink
+	return r
 }
 
 // waitForLogs uses assert.Eventually to wait until at least minRecords LogRecords
@@ -379,6 +387,139 @@ func TestReceiverShutdownRespectsContext(t *testing.T) {
 
 	// Clean up: unblock the stream so the goroutine can exit.
 	blockCancel()
+}
+
+// blockingLogsConsumer blocks in ConsumeLogs until its context is cancelled,
+// simulating a stuck downstream pipeline.
+type blockingLogsConsumer struct {
+	started chan struct{}
+}
+
+func (b *blockingLogsConsumer) Capabilities() consumer.Capabilities {
+	return consumer.Capabilities{}
+}
+
+func (b *blockingLogsConsumer) ConsumeLogs(ctx context.Context, _ plog.Logs) error {
+	select {
+	case b.started <- struct{}{}:
+	default:
+	}
+	<-ctx.Done()
+	return ctx.Err()
+}
+
+// TestReceiverShutdownInterruptsBlockedConsumer verifies that when the shutdown
+// deadline expires while ConsumeLogs is blocked, Shutdown cancels the consume
+// context (unblocking the consumer), returns the context error, and the
+// receiver goroutines actually exit.
+func TestReceiverShutdownInterruptsBlockedConsumer(t *testing.T) {
+	blockCtx, blockCancel := context.WithCancel(context.Background())
+	defer blockCancel()
+
+	streamClient := &mockGetEventsClient{
+		responses: []*tetragonv1.GetEventsResponse{makeExecResponse("/bin/stuck")},
+		blockCtx:  blockCtx,
+	}
+	mockClient := &mockTetragonClient{stream: streamClient}
+	blocked := &blockingLogsConsumer{started: make(chan struct{}, 1)}
+
+	r := newTestReceiverWithConsumer(t, mockClient, blocked)
+	require.NoError(t, r.Start(context.Background(), componenttest.NewNopHost()))
+
+	// Wait until the consumer is blocked inside ConsumeLogs.
+	select {
+	case <-blocked.started:
+	case <-time.After(5 * time.Second):
+		t.Fatal("consumer never received an event")
+	}
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer shutdownCancel()
+
+	done := make(chan error, 1)
+	go func() {
+		done <- r.Shutdown(shutdownCtx)
+	}()
+
+	select {
+	case err := <-done:
+		require.ErrorIs(t, err, context.DeadlineExceeded,
+			"Shutdown must report incomplete shutdown when the deadline expires")
+	case <-time.After(10 * time.Second):
+		t.Fatal("Shutdown hung despite consume-context cancellation")
+	}
+
+	// The goroutines must exit once the consume context is cancelled.
+	exited := make(chan struct{})
+	go func() {
+		r.wg.Wait()
+		close(exited)
+	}()
+	select {
+	case <-exited:
+	case <-time.After(5 * time.Second):
+		t.Fatal("receiver goroutines leaked after Shutdown")
+	}
+}
+
+// TestReceiverMaxElapsedTimeResetAfterHealthyStream verifies that MaxElapsedTime
+// bounds a retry episode rather than the receiver's total lifetime: after a
+// stream stays healthy past the threshold, a later failure gets a fresh retry
+// window instead of giving up immediately.
+func TestReceiverMaxElapsedTimeResetAfterHealthyStream(t *testing.T) {
+	const (
+		healthyThreshold = 100 * time.Millisecond
+		healthyDuration  = 250 * time.Millisecond
+		maxElapsed       = 500 * time.Millisecond
+	)
+
+	var callCount atomic.Int32
+	client := &mockTetragonClientFn{
+		fn: func(ctx context.Context, _ *tetragonv1.GetEventsRequest, _ ...grpc.CallOption) (
+			tetragonv1.FineGuidanceSensors_GetEventsClient, error,
+		) {
+			if callCount.Add(1) == 1 {
+				// First stream: stays "healthy" past the threshold, then dies.
+				healthyCtx, cancel := context.WithCancel(context.Background())
+				time.AfterFunc(healthyDuration, cancel)
+				return &mockGetEventsClient{blockCtx: healthyCtx}, nil
+			}
+			// Every reconnect attempt fails immediately.
+			return nil, io.ErrUnexpectedEOF
+		},
+	}
+
+	r, _ := newTestReceiver(t, client)
+	r.healthyThreshold = healthyThreshold
+	r.cfg.Retry.InitialInterval = 10 * time.Millisecond
+	r.cfg.Retry.MaxInterval = 25 * time.Millisecond
+	r.cfg.Retry.MaxElapsedTime = maxElapsed
+
+	start := time.Now()
+	require.NoError(t, r.Start(context.Background(), componenttest.NewNopHost()))
+
+	exited := make(chan struct{})
+	go func() {
+		r.wg.Wait()
+		close(exited)
+	}()
+
+	select {
+	case <-exited:
+	case <-time.After(10 * time.Second):
+		t.Fatal("streamEvents did not exit after MaxElapsedTime")
+	}
+
+	// The retry window must start at the failure after the healthy stream, not
+	// at receiver start: total runtime >= healthyDuration + a meaningful part
+	// of maxElapsed. With the old receiver-lifetime deadline, the goroutine
+	// would have exited at ~maxElapsed instead.
+	elapsed := time.Since(start)
+	assert.GreaterOrEqual(t, elapsed, healthyDuration+maxElapsed/2,
+		"retry deadline appears to start at receiver start, not at episode start")
+	assert.GreaterOrEqual(t, callCount.Load(), int32(3), "expected reconnect attempts after the healthy stream")
+
+	require.NoError(t, r.Shutdown(context.Background()))
 }
 
 // TestReceiverConsumesLogs verifies event attributes flow through the pipeline correctly.

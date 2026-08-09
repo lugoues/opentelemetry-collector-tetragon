@@ -42,7 +42,9 @@ func createLogsReceiver(
 		logger:    settings.Logger,
 		consumer:  nextConsumer,
 		obsReport: obsReport,
-		// Initialize to no-op so Shutdown-before-Start is safe (Pitfall 6).
-		cancel: func() {},
+		// Initialize to no-ops so Shutdown-before-Start is safe (Pitfall 6).
+		cancel:           func() {},
+		cancelConsume:    func() {},
+		healthyThreshold: healthyStreamThreshold,
 	}, nil
 }
