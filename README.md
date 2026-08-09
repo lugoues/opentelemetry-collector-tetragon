@@ -2,19 +2,19 @@
 
 A custom OpenTelemetry Collector distribution with a native Tetragon gRPC receiver for streaming security events into the OTel pipeline without filesystem coupling.
 
-![CI](https://github.com/cilium/otelcol-tetragon/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/lugoues/opentelemetry-collector-tetragon/actions/workflows/ci.yml/badge.svg)
 
 ## Overview
 
-`otelcol-tetragon` replaces the fragile filelog approach by connecting directly to Tetragon's gRPC `FineGuidanceSensors.GetEvents` streaming RPC. It streams all 10 event types (exec, exit, kprobe, tracepoint, loader, uprobe, lsm, usdt, throttle, rate_limit_info) as OTel LogRecords with full protojson body, extracted attributes, and proper severity mapping.
+`otelcol-tetragon` replaces the fragile filelog approach by connecting directly to Tetragon's gRPC `FineGuidanceSensors.GetEvents` streaming RPC. It streams all 11 event types (exec, exit, kprobe, tracepoint, loader, uprobe, lsm, usdt, throttle, rate_limit_info, test) as OTel LogRecords with full protojson body, extracted attributes, and proper severity mapping.
 
 The collector is published as a multi-arch container image to the GitHub Container Registry and can be used as a drop-in replacement for any filelog-based Tetragon event pipeline.
 
 ## Usage
 
 ```bash
-docker pull ghcr.io/cilium/otelcol-tetragon:latest
-docker run --rm -v ./config.yaml:/etc/otelcol/config.yaml ghcr.io/cilium/otelcol-tetragon:latest
+docker pull ghcr.io/lugoues/opentelemetry-collector-tetragon:latest
+docker run --rm -v ./config.yaml:/etc/otelcol/config.yaml ghcr.io/lugoues/opentelemetry-collector-tetragon:latest
 ```
 
 The container uses a [distroless](https://github.com/GoogleContainerTools/distroless) base image and runs as non-root (UID 1000). The health check extension listens on port 13133.
@@ -30,12 +30,12 @@ Mount a YAML config file into the container at `/etc/otelcol/config.yaml` (the d
 ```bash
 docker run --rm \
   -v ./my-config.yaml:/etc/otelcol/config.yaml \
-  ghcr.io/cilium/otelcol-tetragon:latest
+  ghcr.io/lugoues/opentelemetry-collector-tetragon:latest
 
 # Or with a custom path
 docker run --rm \
   -v ./my-config.yaml:/config.yaml \
-  ghcr.io/cilium/otelcol-tetragon:latest --config /config.yaml
+  ghcr.io/lugoues/opentelemetry-collector-tetragon:latest --config /config.yaml
 ```
 
 An example config is included at [`container/rootfs/etc/otelcol/config.yaml`](container/rootfs/etc/otelcol/config.yaml).
@@ -49,14 +49,17 @@ The OTel Collector supports `${env:VAR_NAME}` substitution in config files. The 
 | `TETRAGON_ENDPOINT` | Tetragon gRPC server address | `tetragon.kube-system.svc:54321` |
 | `OTEL_EXPORTER_ENDPOINT` | OTLP/HTTP exporter endpoint | `http://openobserve:5080/api/default` |
 | `OTEL_AUTH` | Base64-encoded `user:password` for exporter auth header | `dXNlcjpwYXNz` |
+| `OTEL_STREAM_NAME` | Value for the exporter's `stream-name` header (target stream in OpenObserve) | `tetragon` |
+| `OTEL_LOG_LEVEL` | Collector self-telemetry log level (optional, defaults to `info`) | `debug` |
 
 ```bash
 docker run --rm \
   -e TETRAGON_ENDPOINT=tetragon.kube-system.svc:54321 \
   -e OTEL_EXPORTER_ENDPOINT=http://openobserve:5080/api/default \
   -e OTEL_AUTH=dXNlcjpwYXNz \
+  -e OTEL_STREAM_NAME=tetragon \
   -v ./config.yaml:/etc/otelcol/config.yaml \
-  ghcr.io/cilium/otelcol-tetragon:latest
+  ghcr.io/lugoues/opentelemetry-collector-tetragon:latest
 ```
 
 You can define your own env vars in custom config files using the same `${env:VAR_NAME}` syntax.
@@ -75,7 +78,7 @@ The collector binary accepts these flags after the entrypoint:
 ```bash
 docker run --rm \
   -v ./config.yaml:/etc/otelcol/config.yaml \
-  ghcr.io/cilium/otelcol-tetragon:latest \
+  ghcr.io/lugoues/opentelemetry-collector-tetragon:latest \
   --config /etc/otelcol/config.yaml \
   --set receivers.tetragon.endpoint=tetragon.kube-system.svc:54321
 ```
@@ -160,8 +163,8 @@ curl https://mise.run | sh
 ### Getting Started
 
 ```bash
-git clone https://github.com/cilium/otelcol-tetragon.git
-cd otelcol-tetragon
+git clone https://github.com/lugoues/opentelemetry-collector-tetragon.git
+cd opentelemetry-collector-tetragon
 mise install        # installs Go 1.25
 ```
 
@@ -174,7 +177,7 @@ mise run test       # run receiver tests with race detector
 mise run lint       # run go vet on receiver module
 mise run build      # build receiver module
 mise run tidy       # tidy receiver module dependencies
-mise run ocb        # build custom collector binary (output: /tmp/otelcol-tetragon/)
+mise run ocb        # build custom collector binary (output: /tmp/otelcol-tetragon/; the task overrides builder-config.yaml's default /tmp/dist)
 mise run container  # build container image (otelcol-tetragon:local)
 mise run smoke      # smoke test: start container, check health, stop
 ```
@@ -198,8 +201,11 @@ This distribution includes the following OpenTelemetry Collector components:
 |-----------|------|--------|
 | tetragonreceiver | receiver | this repo |
 | batchprocessor | processor | opentelemetry-collector core |
+| memorylimiterprocessor | processor | opentelemetry-collector core |
 | resourcedetectionprocessor | processor | opentelemetry-collector-contrib |
+| otlpexporter | exporter | opentelemetry-collector core |
 | otlphttpexporter | exporter | opentelemetry-collector core |
+| debugexporter | exporter | opentelemetry-collector core |
 | healthcheckextension | extension | opentelemetry-collector-contrib |
 | filestorage | extension | opentelemetry-collector-contrib |
 
