@@ -1,10 +1,10 @@
 module github.com/cilium/otelcol-tetragon/receiver/tetragonreceiver
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/cenkalti/backoff/v5 v5.0.3
-	github.com/cilium/tetragon/api v1.6.0
+	github.com/cilium/tetragon/api v1.7.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/golden v0.158.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatatest v0.158.0
 	github.com/stretchr/testify v1.11.1
@@ -25,7 +25,7 @@ require (
 	go.uber.org/goleak v1.3.0
 	go.uber.org/zap v1.28.0
 	google.golang.org/grpc v1.83.0
-	google.golang.org/protobuf v1.36.11
+	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af
 )
 
 require (
