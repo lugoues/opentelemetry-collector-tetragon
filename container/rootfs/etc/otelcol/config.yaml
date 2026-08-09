@@ -31,7 +31,7 @@ processors:
       hostname_sources: [os]
 
 exporters:
-  otlp_http/openobserve:
+  otlphttp/openobserve:
     endpoint: ${env:OTEL_EXPORTER_ENDPOINT}
     headers:
       Authorization: Basic ${env:OTEL_AUTH}
@@ -59,4 +59,4 @@ service:
     logs/tetragon:
       receivers: [tetragon]
       processors: [memory_limiter, resourcedetection, batch]
-      exporters: [otlp_http/openobserve]
+      exporters: [otlphttp/openobserve]
