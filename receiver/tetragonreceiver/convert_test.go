@@ -12,9 +12,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-// TestConvertEvent_Golden validates converter output for all 10 event types using
+// TestConvertEvent_Golden validates converter output for all 11 event types using
 // golden file comparison. This is the primary validation strategy per CONTEXT.md.
 //
 // To regenerate golden files after intentional converter changes:
@@ -36,6 +37,7 @@ func TestConvertEvent_Golden(t *testing.T) {
 		{"process_usdt", "testdata/events/process_usdt.json", "testdata/golden/process_usdt.yaml"},
 		{"process_throttle", "testdata/events/process_throttle.json", "testdata/golden/process_throttle.yaml"},
 		{"rate_limit_info", "testdata/events/rate_limit_info.json", "testdata/golden/rate_limit_info.yaml"},
+		{"test", "testdata/events/test.json", "testdata/golden/test.yaml"},
 	}
 
 	for _, tt := range tests {
@@ -145,12 +147,85 @@ func TestConvertEvent_UnknownEventType(t *testing.T) {
 	assert.False(t, ok, "unknown event should not have process attributes")
 }
 
-// TestFixtures_Unmarshal verifies that all 10 JSON fixtures can be successfully
+// TestConvertEvent_AbsentWrapperFields verifies that optional wrapper fields
+// (pid/uid) that are absent on the proto do not produce false zero-valued
+// attributes, and that a nil process/parent yields no process attributes at all.
+func TestConvertEvent_AbsentWrapperFields(t *testing.T) {
+	t.Run("process without pid/uid wrappers", func(t *testing.T) {
+		resp := &tetragonv1.GetEventsResponse{
+			Event: &tetragonv1.GetEventsResponse_ProcessExec{
+				ProcessExec: &tetragonv1.ProcessExec{
+					Process: &tetragonv1.Process{Binary: "/bin/nopid"},
+					Parent:  &tetragonv1.Process{Binary: "/bin/parent"},
+				},
+			},
+		}
+		lr := convertEvent(resp).ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().At(0)
+
+		_, ok := lr.Attributes().Get("tetragon.process.pid")
+		assert.False(t, ok, "absent pid wrapper must not become pid 0")
+		_, ok = lr.Attributes().Get("tetragon.process.uid")
+		assert.False(t, ok, "absent uid wrapper must not become uid 0")
+		_, ok = lr.Attributes().Get("tetragon.parent.pid")
+		assert.False(t, ok, "absent parent pid wrapper must not become pid 0")
+
+		binary, ok := lr.Attributes().Get("tetragon.process.binary")
+		require.True(t, ok)
+		assert.Equal(t, "/bin/nopid", binary.Str())
+	})
+
+	t.Run("present zero uid is emitted", func(t *testing.T) {
+		resp := &tetragonv1.GetEventsResponse{
+			Event: &tetragonv1.GetEventsResponse_ProcessExec{
+				ProcessExec: &tetragonv1.ProcessExec{
+					Process: &tetragonv1.Process{
+						Binary: "/bin/root",
+						Uid:    wrapperspb.UInt32(0),
+					},
+				},
+			},
+		}
+		lr := convertEvent(resp).ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().At(0)
+
+		uid, ok := lr.Attributes().Get("tetragon.process.uid")
+		require.True(t, ok, "explicitly-set uid 0 (root) must be emitted")
+		assert.Equal(t, int64(0), uid.Int())
+	})
+
+	t.Run("nil process and parent", func(t *testing.T) {
+		resp := &tetragonv1.GetEventsResponse{
+			Event: &tetragonv1.GetEventsResponse_ProcessExec{
+				ProcessExec: &tetragonv1.ProcessExec{},
+			},
+		}
+		lr := convertEvent(resp).ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().At(0)
+
+		_, ok := lr.Attributes().Get("tetragon.process.binary")
+		assert.False(t, ok, "nil process must not emit process attributes")
+		_, ok = lr.Attributes().Get("tetragon.parent.binary")
+		assert.False(t, ok, "nil parent must not emit parent attributes")
+	})
+
+	t.Run("absent event time leaves timestamp unset", func(t *testing.T) {
+		resp := &tetragonv1.GetEventsResponse{
+			Event: &tetragonv1.GetEventsResponse_ProcessExec{
+				ProcessExec: &tetragonv1.ProcessExec{},
+			},
+		}
+		lr := convertEvent(resp).ResourceLogs().At(0).ScopeLogs().At(0).LogRecords().At(0)
+
+		assert.Equal(t, int64(0), lr.Timestamp().AsTime().UnixNano(),
+			"missing event time must leave Timestamp at zero, not fabricate one")
+		assert.NotZero(t, lr.ObservedTimestamp().AsTime().UnixNano())
+	})
+}
+
+// TestFixtures_Unmarshal verifies that all 11 JSON fixtures can be successfully
 // unmarshaled into tetragonv1.GetEventsResponse, confirming proto-schema fidelity.
 func TestFixtures_Unmarshal(t *testing.T) {
 	files, err := filepath.Glob("testdata/events/*.json")
 	require.NoError(t, err)
-	require.Len(t, files, 10, "expected 10 event fixtures")
+	require.Len(t, files, 11, "expected 11 event fixtures")
 
 	for _, f := range files {
 		t.Run(filepath.Base(f), func(t *testing.T) {

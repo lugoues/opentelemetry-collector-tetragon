@@ -18,9 +18,6 @@ resourceLogs:
               - key: tetragon.process.pid
                 value:
                   intValue: "5555"
-              - key: tetragon.process.uid
-                value:
-                  intValue: "0"
               - key: tetragon.process.exec_id
                 value:
                   stringValue: uprobe-test-id-55555
@@ -38,9 +35,9 @@ resourceLogs:
                   stringValue: SSL_write
             body:
               stringValue: '{"process_uprobe":{"process":{"exec_id":"uprobe-test-id-55555","pid":5555,"cwd":"/app","binary":"/usr/bin/python3"},"symbol":"SSL_write","policy_name":"ssl-monitor","action":"KPROBE_ACTION_POST"},"node_name":"worker-1","time":"2026-03-18T10:05:00Z"}'
-            observedTimeUnixNano: "1773854528123191145"
-            severityNumber: 13
-            severityText: WARN
+            observedTimeUnixNano: "1786303351924652979"
+            severityNumber: 9
+            severityText: INFO
             timeUnixNano: "1773828300000000000"
         scope:
           name: tetragonreceiver

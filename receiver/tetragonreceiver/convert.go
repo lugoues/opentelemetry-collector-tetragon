@@ -63,8 +63,14 @@ func convertEvent(resp *tetragonv1.GetEventsResponse) plog.Logs {
 	if proc != nil {
 		attrs.PutStr("tetragon.process.binary", proc.GetBinary())
 		attrs.PutStr("tetragon.process.arguments", proc.GetArguments())
-		attrs.PutInt("tetragon.process.pid", int64(proc.GetPid().GetValue()))
-		attrs.PutInt("tetragon.process.uid", int64(proc.GetUid().GetValue()))
+		// PID/UID use optional wrapper types: only emit them when present, so a
+		// missing value is not misreported as PID/UID 0 (which is a real UID).
+		if pid := proc.GetPid(); pid != nil {
+			attrs.PutInt("tetragon.process.pid", int64(pid.GetValue()))
+		}
+		if uid := proc.GetUid(); uid != nil {
+			attrs.PutInt("tetragon.process.uid", int64(uid.GetValue()))
+		}
 		attrs.PutStr("tetragon.process.exec_id", proc.GetExecId())
 		attrs.PutStr("tetragon.process.cwd", proc.GetCwd())
 
@@ -82,7 +88,9 @@ func convertEvent(resp *tetragonv1.GetEventsResponse) plog.Logs {
 	parent := extractParent(resp)
 	if parent != nil {
 		attrs.PutStr("tetragon.parent.binary", parent.GetBinary())
-		attrs.PutInt("tetragon.parent.pid", int64(parent.GetPid().GetValue()))
+		if pid := parent.GetPid(); pid != nil {
+			attrs.PutInt("tetragon.parent.pid", int64(pid.GetValue()))
+		}
 		attrs.PutStr("tetragon.parent.exec_id", parent.GetExecId())
 	}
 
@@ -93,24 +101,28 @@ func convertEvent(resp *tetragonv1.GetEventsResponse) plog.Logs {
 }
 
 // setSeverity sets the severity on the log record based on event type.
+// All observed events are INFO — an event type says nothing about whether the
+// observation is bad (a kprobe hit is routine telemetry, not a warning).
+// Throttle and rate-limit events are WARN because they signal that Tetragon is
+// dropping or suppressing data, i.e. an operational problem with the event
+// stream itself. Unknown/unset event oneofs leave severity unspecified.
 func setSeverity(lr plog.LogRecord, resp *tetragonv1.GetEventsResponse) {
 	switch resp.GetEvent().(type) {
 	case *tetragonv1.GetEventsResponse_ProcessExec,
 		*tetragonv1.GetEventsResponse_ProcessExit,
-		*tetragonv1.GetEventsResponse_ProcessLoader:
-		lr.SetSeverityNumber(plog.SeverityNumberInfo)
-		lr.SetSeverityText("INFO")
-	case *tetragonv1.GetEventsResponse_ProcessKprobe,
+		*tetragonv1.GetEventsResponse_ProcessLoader,
+		*tetragonv1.GetEventsResponse_ProcessKprobe,
 		*tetragonv1.GetEventsResponse_ProcessTracepoint,
 		*tetragonv1.GetEventsResponse_ProcessLsm,
 		*tetragonv1.GetEventsResponse_ProcessUprobe,
-		*tetragonv1.GetEventsResponse_ProcessUsdt:
-		lr.SetSeverityNumber(plog.SeverityNumberWarn)
-		lr.SetSeverityText("WARN")
+		*tetragonv1.GetEventsResponse_ProcessUsdt,
+		*tetragonv1.GetEventsResponse_Test:
+		lr.SetSeverityNumber(plog.SeverityNumberInfo)
+		lr.SetSeverityText("INFO")
 	case *tetragonv1.GetEventsResponse_ProcessThrottle,
 		*tetragonv1.GetEventsResponse_RateLimitInfo:
-		lr.SetSeverityNumber(plog.SeverityNumberError)
-		lr.SetSeverityText("ERROR")
+		lr.SetSeverityNumber(plog.SeverityNumberWarn)
+		lr.SetSeverityText("WARN")
 	}
 }
 
@@ -137,6 +149,8 @@ func eventTypeName(resp *tetragonv1.GetEventsResponse) string {
 		return "process_throttle"
 	case *tetragonv1.GetEventsResponse_RateLimitInfo:
 		return "rate_limit_info"
+	case *tetragonv1.GetEventsResponse_Test:
+		return "test"
 	default:
 		return "unknown"
 	}

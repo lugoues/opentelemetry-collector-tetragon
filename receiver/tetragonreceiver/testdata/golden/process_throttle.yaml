@@ -11,9 +11,9 @@ resourceLogs:
                   stringValue: process_throttle
             body:
               stringValue: '{"process_throttle":{"type":"THROTTLE_START","cgroup":"/system.slice/docker.service"},"node_name":"worker-1","time":"2026-03-18T10:08:00Z"}'
-            observedTimeUnixNano: "1773854528125764641"
-            severityNumber: 17
-            severityText: ERROR
+            observedTimeUnixNano: "1786303351927288337"
+            severityNumber: 13
+            severityText: WARN
             timeUnixNano: "1773828480000000000"
         scope:
           name: tetragonreceiver

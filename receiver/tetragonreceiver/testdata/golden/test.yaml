@@ -8,12 +8,12 @@ resourceLogs:
                   stringValue: tetragon
               - key: event.name
                 value:
-                  stringValue: rate_limit_info
+                  stringValue: test
             body:
-              stringValue: '{"rate_limit_info":{"number_of_dropped_process_events":"42"},"node_name":"worker-1","time":"2026-03-18T10:09:00Z"}'
-            observedTimeUnixNano: "1786303351927660147"
-            severityNumber: 13
-            severityText: WARN
+              stringValue: '{"test":{"arg0":"1","arg1":"2","arg2":"3","arg3":"4"},"node_name":"worker-1","time":"2026-03-18T10:09:00Z"}'
+            observedTimeUnixNano: "1786303351928032160"
+            severityNumber: 9
+            severityText: INFO
             timeUnixNano: "1773828540000000000"
         scope:
           name: tetragonreceiver

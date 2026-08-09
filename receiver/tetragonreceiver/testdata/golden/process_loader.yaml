@@ -18,9 +18,6 @@ resourceLogs:
               - key: tetragon.process.pid
                 value:
                   intValue: "4444"
-              - key: tetragon.process.uid
-                value:
-                  intValue: "0"
               - key: tetragon.process.exec_id
                 value:
                   stringValue: loader-test-id-44444
@@ -29,7 +26,7 @@ resourceLogs:
                   stringValue: /
             body:
               stringValue: '{"process_loader":{"process":{"exec_id":"loader-test-id-44444","pid":4444,"cwd":"/","binary":"/usr/lib/ld-linux.so"},"path":"/usr/lib/libc.so.6"},"node_name":"worker-1","time":"2026-03-18T10:04:00Z"}'
-            observedTimeUnixNano: "1773854528122651821"
+            observedTimeUnixNano: "1786303351924158693"
             severityNumber: 9
             severityText: INFO
             timeUnixNano: "1773828240000000000"
