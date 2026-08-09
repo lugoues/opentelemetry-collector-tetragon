@@ -1,0 +1,9 @@
+# Exclude everything
+**
+
+# Include only what we need
+!/container/**
+!/distribution/**
+!/receiver/**
+!/go.mod/**
+!/.golangci.yml
