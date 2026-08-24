@@ -1,5 +1,5 @@
 # --- Build stage ---
-FROM docker.io/library/golang:1.26-bookworm AS builder
+FROM docker.io/library/golang:1.27-bookworm AS builder
 
 # The OCB version is kept in lockstep with distribution/builder-config.yaml
 # and .github/workflows/ci.yml by Renovate (see renovate.json customManagers).
