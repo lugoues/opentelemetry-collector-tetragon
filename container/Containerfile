@@ -3,7 +3,7 @@ FROM docker.io/library/golang:1.27-bookworm AS builder
 
 # The OCB version is kept in lockstep with distribution/builder-config.yaml
 # and .github/workflows/ci.yml by Renovate (see renovate.json customManagers).
-RUN go install go.opentelemetry.io/collector/cmd/builder@v0.158.0
+RUN go install go.opentelemetry.io/collector/cmd/builder@v0.159.0
 
 WORKDIR /build
 COPY . .
