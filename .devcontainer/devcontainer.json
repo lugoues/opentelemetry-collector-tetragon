@@ -6,7 +6,7 @@
 	"image": "mcr.microsoft.com/devcontainers/base:trixie",
 	"features": {
 		"ghcr.io/lugoues/devcontainer-features/mise:1.0.7": {},
-		"ghcr.io/devcontainers/features/docker-in-docker:4.0.0": {
+		"ghcr.io/devcontainers/features/docker-in-docker:4.1.0": {
 			"installDockerBuildx": true,
 			"version": "latest",
 			"dockerDashComposeVersion": "v2",
