@@ -3,7 +3,7 @@ module github.com/cilium/otelcol-tetragon/receiver/tetragonreceiver
 go 1.26.0
 
 require (
-	github.com/cenkalti/backoff/v7 v7.0.0
+	github.com/cenkalti/backoff/v7 v7.0.1
 	github.com/cilium/tetragon/api v1.7.1
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/golden v0.159.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatatest v0.159.0
